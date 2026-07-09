@@ -276,7 +276,9 @@ $tanggal_format = $dh[date('l')] . ", " . date('d') . " " . $db[date('F')] . " "
 
             <li style="margin-top:20px;"><a href="../logout.php"><i class="fa-solid fa-right-from-bracket"></i> <span>Log out</span></a></li>
         </ul>
-    </aside>5
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <main class="main-content">
         <header class="topbar">
@@ -336,15 +338,20 @@ $tanggal_format = $dh[date('l')] . ", " . date('d') . " " . $db[date('F')] . " "
     </main>
 
     <script>
-        function toggleSidebar() {
+       function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
             sidebar.classList.toggle('minimized');
-            const mainContent = document.querySelector('.main-content');
-            if (sidebar.classList.contains('minimized')) {
-                mainContent.style.marginLeft = '70px';
-            } else {
-                mainContent.style.marginLeft = '230px';
+            const isOpen = sidebar.classList.contains('minimized');
+
+            if (window.innerWidth <= 768) {
+                // Mobile: "minimized" = sidebar kebuka. Overlay nongol biar bisa klik luar buat tutup.
+                overlay.classList.toggle('show', isOpen);
+                return;
             }
+
+            const mainContent = document.querySelector('.main-content');
+            mainContent.style.marginLeft = isOpen ? '70px' : '230px';
         }
 
         function toggleSubmenu(el) {

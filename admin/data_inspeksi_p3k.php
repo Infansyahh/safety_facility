@@ -507,6 +507,8 @@ foreach ($rows as $r) {
         </ul>
     </aside>
 
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
     <main class="main-content">
         <header class="topbar">
             <div class="topbar-left">
@@ -669,13 +671,18 @@ foreach ($rows as $r) {
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
             sidebar.classList.toggle('minimized');
-            const mainContent = document.querySelector('.main-content');
-            if (sidebar.classList.contains('minimized')) {
-                mainContent.style.marginLeft = '70px';
-            } else {
-                mainContent.style.marginLeft = '230px';
+            const isOpen = sidebar.classList.contains('minimized');
+
+            if (window.innerWidth <= 768) {
+                // Mobile: "minimized" = sidebar kebuka. Overlay nongol biar bisa klik luar buat tutup.
+                overlay.classList.toggle('show', isOpen);
+                return;
             }
+
+            const mainContent = document.querySelector('.main-content');
+            mainContent.style.marginLeft = isOpen ? '70px' : '230px';
         }
 
         function toggleSubmenu(el) {

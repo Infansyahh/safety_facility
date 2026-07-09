@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 08, 2026 at 04:50 AM
+-- Generation Time: Jul 09, 2026 at 08:08 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -60,7 +60,8 @@ CREATE TABLE `area_line` (
 INSERT INTO `area_line` (`id_line`, `nama_line`, `created_at`, `jenis`) VALUES
 (2, 'Factory A', '2026-07-02 00:42:28', 'lampu_emergency'),
 (3, 'FA', '2026-07-06 03:39:17', 'lampu_exit'),
-(4, 'FA', '2026-07-06 07:16:59', 'p3k');
+(4, 'FA', '2026-07-06 07:16:59', 'p3k'),
+(5, 'FA', '2026-07-08 06:55:58', 'eyewash');
 
 -- --------------------------------------------------------
 
@@ -87,6 +88,13 @@ CREATE TABLE `inspeksi_eyewash` (
   `catatan` varchar(255) NOT NULL,
   `username` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `inspeksi_eyewash`
+--
+
+INSERT INTO `inspeksi_eyewash` (`id_inspeksi`, `code_eyewash`, `tanggal_inspeksi`, `kondisi`, `catatan`, `username`) VALUES
+(2, 'EYE01', '2026-07-09', 'baik', 'Aliran Lancar, Air Bersih, Nozzle Lengkap, Pedal Berfungsi', 'Widiyantoro');
 
 -- --------------------------------------------------------
 
@@ -122,12 +130,20 @@ CREATE TABLE `inspeksi_lampu_exit` (
   `id_inspeksi` int(11) NOT NULL,
   `id_lampu` varchar(20) NOT NULL,
   `id_user` int(11) NOT NULL,
+  `nama_operator` varchar(100) DEFAULT NULL,
   `tanggal_cek` datetime NOT NULL,
   `kondisi_fisik` enum('Baik','Tidak') NOT NULL DEFAULT 'Baik',
   `kondisi_lampu` enum('Baik','Tidak') NOT NULL DEFAULT 'Baik',
   `kondisi_tulisan` enum('Baik','Tidak') NOT NULL DEFAULT 'Baik',
   `keterangan` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `inspeksi_lampu_exit`
+--
+
+INSERT INTO `inspeksi_lampu_exit` (`id_inspeksi`, `id_lampu`, `id_user`, `nama_operator`, `tanggal_cek`, `kondisi_fisik`, `kondisi_lampu`, `kondisi_tulisan`, `keterangan`) VALUES
+(2, 'LE01', 1, 'Widiyantoro', '2026-07-09 12:13:35', 'Baik', 'Baik', 'Baik', 'bagus semua\r\n');
 
 -- --------------------------------------------------------
 
@@ -150,6 +166,13 @@ CREATE TABLE `inspeksi_p3k` (
   `username` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `inspeksi_p3k`
+--
+
+INSERT INTO `inspeksi_p3k` (`id_inspeksi`, `code_p3k`, `id_user`, `line_area`, `kondisi_kotak`, `kelengkapan_isi`, `expired_obat`, `keterangan`, `tanggal_inspeksi`, `kondisi`, `catatan`, `username`) VALUES
+(12, 'P3K01', 1, 'FA', 'Baik', 'Lengkap', 'Lengkap', 'ww', '2026-07-09', 'baik', 'ww', 'Widiyantoro');
+
 -- --------------------------------------------------------
 
 --
@@ -159,10 +182,18 @@ CREATE TABLE `inspeksi_p3k` (
 CREATE TABLE `master_eyewash` (
   `id` int(11) NOT NULL,
   `code` varchar(50) NOT NULL,
+  `line_area` varchar(100) DEFAULT NULL,
   `lokasi` varchar(255) NOT NULL,
   `kondisi` enum('baik','rusak','','') NOT NULL,
   `catatan` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `master_eyewash`
+--
+
+INSERT INTO `master_eyewash` (`id`, `code`, `line_area`, `lokasi`, `kondisi`, `catatan`) VALUES
+(1, 'EYE01', NULL, 'FA', 'baik', 'Aliran Lancar, Air Bersih, Nozzle Lengkap, Pedal Berfungsi');
 
 -- --------------------------------------------------------
 
@@ -188,7 +219,7 @@ CREATE TABLE `master_lampu` (
 
 INSERT INTO `master_lampu` (`id`, `code`, `line_area`, `lokasi`, `indikator_mati_menyala`, `lampu_mati`, `nyala_otomatis`, `kondisi`, `catatan`) VALUES
 (1, 'LPE01', 'Factory A', 'OFFICE INVENTORY', 'Nyala', 'Tidak', 'Ya', 'baik', 'Mantap'),
-(2, 'LE01', 'FA', 'OFFICE 1 (PINTU MASUK)', 'Nyala', 'Tidak', 'Tidak', 'baik', 'BAIK');
+(2, 'LE01', 'FA', 'OFFICE 1 (PINTU MASUK)', 'Nyala', 'Tidak', 'Tidak', 'baik', 'bagus semua\r\n');
 
 -- --------------------------------------------------------
 
@@ -207,6 +238,13 @@ CREATE TABLE `master_p3k` (
   `kondisi` enum('baik','rusak','','') NOT NULL,
   `catatan` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `master_p3k`
+--
+
+INSERT INTO `master_p3k` (`id`, `code`, `line_area`, `lokasi`, `kondisi_kotak`, `kelengkapan_isi`, `expired_obat`, `kondisi`, `catatan`) VALUES
+(4, 'P3K01', 'FA', 'OFFICE HSE', 'Baik', 'Lengkap', 'Lengkap', 'baik', 'ww');
 
 -- --------------------------------------------------------
 
@@ -326,7 +364,7 @@ ALTER TABLE `agenda_inspeksi`
 -- AUTO_INCREMENT for table `area_line`
 --
 ALTER TABLE `area_line`
-  MODIFY `id_line` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_line` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `departemen`
@@ -338,43 +376,43 @@ ALTER TABLE `departemen`
 -- AUTO_INCREMENT for table `inspeksi_eyewash`
 --
 ALTER TABLE `inspeksi_eyewash`
-  MODIFY `id_inspeksi` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_inspeksi` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `inspeksi_lampu`
 --
 ALTER TABLE `inspeksi_lampu`
-  MODIFY `id_inspeksi` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id_inspeksi` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `inspeksi_lampu_exit`
 --
 ALTER TABLE `inspeksi_lampu_exit`
-  MODIFY `id_inspeksi` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_inspeksi` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `inspeksi_p3k`
 --
 ALTER TABLE `inspeksi_p3k`
-  MODIFY `id_inspeksi` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id_inspeksi` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `master_eyewash`
 --
 ALTER TABLE `master_eyewash`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `master_lampu`
 --
 ALTER TABLE `master_lampu`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `master_p3k`
 --
 ALTER TABLE `master_p3k`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -390,8 +428,7 @@ ALTER TABLE `users`
 -- Constraints for table `inspeksi_eyewash`
 --
 ALTER TABLE `inspeksi_eyewash`
-  ADD CONSTRAINT `fk_inspeksi_eyewash_code` FOREIGN KEY (`code_eyewash`) REFERENCES `master_eyewash` (`code`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_inspeksi_eyewash_user` FOREIGN KEY (`username`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `fk_inspeksi_eyewash_code` FOREIGN KEY (`code_eyewash`) REFERENCES `master_eyewash` (`code`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `inspeksi_lampu`
