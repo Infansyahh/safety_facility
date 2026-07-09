@@ -46,11 +46,37 @@ if (isset($_POST['submit'])) {
         mysqli_stmt_bind_param($stmt, "ssssssssi", $code, $line_area, $lokasi, $indikator, $lampu_mati, $otomatis, $catatan, $kondisi, $id);
         
         if (mysqli_stmt_execute($stmt)) {
-            // Insert ke tabel inspeksi
-            $query_inspeksi = "INSERT INTO inspeksi_lampu (code_lampu, username, tanggal_inspeksi, kondisi, catatan) VALUES (?, ?, NOW(), ?, ?)";
-            $stmt_inspeksi = mysqli_prepare($koneksi, $query_inspeksi);
-            mysqli_stmt_bind_param($stmt_inspeksi, "ssss", $code, $user, $kondisi, $catatan);
-            mysqli_stmt_execute($stmt_inspeksi);
+
+            if (stripos($code, 'LE') === 0) {
+                // Lampu Exit -> masuk ke tabel inspeksi_lampu_exit (dipakai laporan_lampu_exit.php)
+                $id_user = $_SESSION['id_user'] ?? null;
+                if (!$id_user) {
+                    // fallback cari id_user dari username jika session id_user belum ada
+                    $q_user = mysqli_prepare($koneksi, "SELECT id_user FROM users WHERE nama_lengkap = ? OR username = ? LIMIT 1");
+                    mysqli_stmt_bind_param($q_user, "ss", $user, $user);
+                    mysqli_stmt_execute($q_user);
+                    $r_user = mysqli_stmt_get_result($q_user);
+                    if ($row_user = mysqli_fetch_assoc($r_user)) {
+                        $id_user = $row_user['id_user'];
+                    }
+                }
+
+                $kondisi_lampu = (strtolower($indikator) === 'mati') ? 'Tidak' : 'Baik';
+                $kondisi_fisik = 'Baik';
+                $kondisi_tulisan = 'Baik';
+                $nama_operator = $_SESSION['nama_operator_popup'] ?? $user;
+
+                $query_inspeksi = "INSERT INTO inspeksi_lampu_exit (id_lampu, id_user, nama_operator, tanggal_cek, kondisi_fisik, kondisi_lampu, kondisi_tulisan, keterangan) VALUES (?, ?, ?, NOW(), ?, ?, ?, ?)";
+                $stmt_inspeksi = mysqli_prepare($koneksi, $query_inspeksi);
+                mysqli_stmt_bind_param($stmt_inspeksi, "sisssss", $code, $id_user, $nama_operator, $kondisi_fisik, $kondisi_lampu, $kondisi_tulisan, $catatan);
+                mysqli_stmt_execute($stmt_inspeksi);
+            } else {
+                // Selain Lampu Exit -> tetap ke tabel inspeksi_lampu lama
+                $query_inspeksi = "INSERT INTO inspeksi_lampu (code_lampu, username, tanggal_inspeksi, kondisi, catatan) VALUES (?, ?, NOW(), ?, ?)";
+                $stmt_inspeksi = mysqli_prepare($koneksi, $query_inspeksi);
+                mysqli_stmt_bind_param($stmt_inspeksi, "ssss", $code, $user, $kondisi, $catatan);
+                mysqli_stmt_execute($stmt_inspeksi);
+            }
 
             $redirect_url = (stripos($code, 'LE') === 0) ? '../admin/lampu_exit.php' : '../admin/master_lampu.php';
             echo "<script>

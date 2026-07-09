@@ -287,7 +287,7 @@ $tanggal_format = $dh[date('l')] . ", " . date('d') . " " . $db[date('F')] . " "
         <div class="page-head">
             <div class="ph-icon"><i class="fa-solid fa-bolt"></i></div>
             <div class="ph-info">
-                <h2>Area Line â€” Lampu Emergency</h2>
+                <h2>Area Line  Lampu Emergency</h2>
                 <p>Kelola daftar area / line untuk inspeksi Lampu Emergency</p>
             </div>
         </div>
@@ -362,7 +362,7 @@ $tanggal_format = $dh[date('l')] . ", " . date('d') . " " . $db[date('F')] . " "
 
 <div class="modal-overlay" id="modalTambah">
     <div class="modal-box">
-        <h3><i class="fa-solid fa-bolt"></i> Tambah Area Line â€” Lampu Emergency</h3>
+        <h3><i class="fa-solid fa-bolt"></i> Tambah Area Line  Lampu Emergency</h3>
         <form method="POST">
             <div class="form-group">
                 <label>Nama Area / Line <span style="color:#e15554;">*</span></label>

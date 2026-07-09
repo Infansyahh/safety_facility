@@ -510,7 +510,7 @@ $tanggal_format = $dh[date('l')] . ", " . date('d') . " " . $db[date('F')] . " "
             <div class="page-head">
                 <div class="ph-icon"><i class="fa-solid fa-door-open"></i></div>
                 <div class="ph-info">
-                    <h2>Area Line â€” Lampu Exit</h2>
+                    <h2>Area Line Lampu Exit</h2>
                     <p>Kelola daftar area / line untuk inspeksi Lampu Exit</p>
                 </div>
             </div>

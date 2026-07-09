@@ -13,6 +13,14 @@ $bulan  = isset($_GET['bulan']) ? $_GET['bulan'] : date('F');
 $tahun  = isset($_GET['tahun']) ? (int)$_GET['tahun'] : (int)date('Y');
 $cari   = isset($_GET['cari'])  ? trim($_GET['cari']) : '';
 
+/* ---- MAP NAMA BULAN INDONESIA KE ANGKA ---- */
+$peta_bulan = [
+    'Januari' => 1, 'Februari' => 2, 'Maret' => 3, 'April' => 4,
+    'Mei' => 5, 'Juni' => 6, 'Juli' => 7, 'Agustus' => 8,
+    'September' => 9, 'Oktober' => 10, 'November' => 11, 'Desember' => 12
+];
+$bulan_angka = $peta_bulan[$bulan] ?? (int)date('n');
+
 /* ---- HAPUS ---- */
 if (isset($_GET['hapus']) && is_numeric($_GET['hapus'])) {
     $id   = (int)$_GET['hapus'];
@@ -25,19 +33,18 @@ if (isset($_GET['hapus']) && is_numeric($_GET['hapus'])) {
 }
 
 /* ---- QUERY DATA (Disesuaikan dengan SQL asli) ---- */
-$sql = "SELECT i.id_inspeksi, u.nama_lengkap, i.tanggal_inspeksi,
+$sql = "SELECT i.id_inspeksi, i.username AS nama_lengkap, i.tanggal_inspeksi,
                i.code_eyewash, m.lokasi, i.kondisi, i.catatan
         FROM inspeksi_eyewash i
-        LEFT JOIN users u ON i.username = u.username
         LEFT JOIN master_eyewash m ON i.code_eyewash = m.code
-        WHERE MONTHNAME(i.tanggal_inspeksi) = ? AND YEAR(i.tanggal_inspeksi) = ?";
+        WHERE MONTH(i.tanggal_inspeksi) = ? AND YEAR(i.tanggal_inspeksi) = ?";
 
-$param_types  = "si";
-$param_values = [$bulan, $tahun];
+$param_types  = "ii";
+$param_values = [$bulan_angka, $tahun];
 
 if ($cari !== '') {
     $like = "%$cari%";
-    $sql .= " AND (u.nama_lengkap LIKE ? OR i.code_eyewash LIKE ? OR m.lokasi LIKE ?)";
+    $sql .= " AND (i.username LIKE ? OR i.code_eyewash LIKE ? OR m.lokasi LIKE ?)";
     $param_types .= "sss";
     $param_values[] = $like;
     $param_values[] = $like;
@@ -378,4 +385,4 @@ foreach ($rows as $r) {
         }
     </script>
 </body>
-</html> 
+</html>

@@ -460,7 +460,6 @@ $tanggal_format = $dh[date('l')] . ", " . date('d') . " " . $db[date('F')] . " "
                 </ul>
             </li>
             <li><a href="aktivitas.php"><i class="fa-solid fa-clock-rotate-left"></i> <span>Aktivitas Pengguna</span></a></li>
-            <li><a href="kalender.php"><i class="fa-solid fa-calendar-days"></i> <span>Kalender Inspeksi</span></a></li>
             <li><a href="agenda.php"><i class="fa-solid fa-calendar-check"></i> <span>Agenda Inspeksi</span></a></li>
             <li class="has-submenu">
                 <a href="javascript:void(0)" onclick="toggleSubmenu(this)">
@@ -510,7 +509,7 @@ $tanggal_format = $dh[date('l')] . ", " . date('d') . " " . $db[date('F')] . " "
             <div class="page-head">
                 <div class="ph-icon"><i class="fa-solid fa-eye"></i></div>
                 <div class="ph-info">
-                    <h2>Area Line — Eye Wash</h2>
+                    <h2>Area Line  Eye Wash</h2>
                     <p>Kelola daftar area / line untuk inspeksi Eye Wash</p>
                 </div>
             </div>

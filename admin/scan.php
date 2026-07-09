@@ -17,7 +17,7 @@ $daftar_hari = [
     'Saturday' => 'Sabtu'
 ];
 $hari_indo = $daftar_hari[$hari_ini];
-    
+
 $bulan_ini = date('F');
 $daftar_bulan = [
     'January' => 'Januari',
@@ -69,10 +69,10 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                     <i class="fa-solid fa-chevron-down submenu-icon"></i>
                 </a>
                 <ul class="submenu" style="display: none;">
-                    <li><a href="master_lampu.php">  Lampu Emergency</a></li>
-                    <li><a href="lampu_exit.php">  Lampu Exit</a></li>
-                    <li><a href="master_p3k.php">  Kotak P3K</a></li>
-                    <li><a href="master_eyewash.php">  Eye Wash</a></li>
+                    <li><a href="master_lampu.php"> Lampu Emergency</a></li>
+                    <li><a href="lampu_exit.php"> Lampu Exit</a></li>
+                    <li><a href="master_p3k.php"> Kotak P3K</a></li>
+                    <li><a href="master_eyewash.php"> Eye Wash</a></li>
                 </ul>
             </li>
 
@@ -83,13 +83,13 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                     <i class="fa-solid fa-chevron-down submenu-icon"></i>
                 </a>
                 <ul class="submenu" style="display: none;">
-                    <li><a href="area_line_lampu_emergency.php">  Lampu Emergency</a></li>
-                    <li><a href="lampu_exit.php">  Lampu Exit</a></li>
-                    <li><a href="area_line_p3k.php">  Kotak P3K</a></li>
-                    <li><a href="#">  Eye Wash</a></li>
+                    <li><a href="area_line_lampu_emergency.php"> Lampu Emergency</a></li>
+                    <li><a href="lampu_exit.php"> Lampu Exit</a></li>
+                    <li><a href="area_line_p3k.php"> Kotak P3K</a></li>
+                    <li><a href="#"> Eye Wash</a></li>
                 </ul>
             </li>
-            
+
             <li><a href="aktivitas.php"><i class="fa-solid fa-clock-rotate-left"></i> <span>Aktivitas Pengguna</span></a></li>
             <li><a href="agenda.php"><i class="fa-solid fa-calendar-check"></i> <span>Agenda Inspeksi</span></a></li>
 
@@ -100,16 +100,18 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                     <i class="fa-solid fa-chevron-down submenu-icon"></i>
                 </a>
                 <ul class="submenu" style="display: none;">
-                    <li><a href="master_lampu.php">  Lampu Emergency</a></li>
-                    <li><a href="#">  Lampu Exit</a></li>
-                    <li><a href="laporan_p3k.php">  Kotak P3K</a></li>
-                    <li><a href="#">  Eye Wash</a></li>
-                </ul>       
+                    <li><a href="master_lampu.php"> Lampu Emergency</a></li>
+                    <li><a href="#"> Lampu Exit</a></li>
+                    <li><a href="laporan_p3k.php"> Kotak P3K</a></li>
+                    <li><a href="#"> Eye Wash</a></li>
+                </ul>
             </li>
 
             <li style="margin-top: 20px;"><a href="../logout.php"><i class="fa-solid fa-right-from-bracket"></i> <span>Log out</span></a></li>
-        </ul>                                        
+        </ul>
     </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <main class="main-content">
         <header class="topbar">
@@ -135,22 +137,30 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
     </main>
 
     <script>
-        function toggleSidebar() {
+         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
             sidebar.classList.toggle('minimized');
-            const mainContent = document.querySelector('.main-content');
-            if (sidebar.classList.contains('minimized')) {
-                mainContent.style.marginLeft = '70px';
-            } else {
-                mainContent.style.marginLeft = '230px';
+            const isOpen = sidebar.classList.contains('minimized');
+
+            if (window.innerWidth <= 768) {
+                // Mobile: "minimized" = sidebar kebuka. Overlay nongol biar bisa klik luar buat tutup.
+                overlay.classList.toggle('show', isOpen);
+                return;
             }
+
+            const mainContent = document.querySelector('.main-content');
+            mainContent.style.marginLeft = isOpen ? '70px' : '230px';
         }
 
         // --- GANTI BAGIAN INI ---
         let html5QrcodeScanner = new Html5QrcodeScanner("reader", {
-            fps: 15,            // Dinaikkan sedikit agar pembacaan kamera lebih responsif
-            qrbox: { width: 300, height: 300 }, // Memperbesar area deteksi kotak
-            formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ], // Kunci HANYA membaca QR Code agar tidak terganggu teks lain
+            fps: 15, // Dinaikkan sedikit agar pembacaan kamera lebih responsif
+            qrbox: {
+                width: 300,
+                height: 300
+            }, // Memperbesar area deteksi kotak
+            formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE], // Kunci HANYA membaca QR Code agar tidak terganggu teks lain
             experimentalFeatures: {
                 useBarCodeDetectorIfSupported: true // Menggunakan hardware akselerasi jika tersedia
             }

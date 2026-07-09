@@ -33,6 +33,13 @@ if (isset($_GET['scan_id'])) {
         exit();
     }
 
+    // Check master_eyewash
+    $query_eyewash = mysqli_query($koneksi, "SELECT code FROM master_eyewash WHERE id = '$scan_id' OR code = '$scan_id'");
+    if ($query_eyewash && mysqli_num_rows($query_eyewash) > 0) {
+        header("Location: ../admin/master_eyewash.php?scan_id=" . urlencode($scan_id) . "&action=scan_popup");
+        exit();
+    }
+
     // Default: redirect to master_lampu.php which will show the "not found" message
     header("Location: ../admin/master_lampu.php?scan_id=" . urlencode($scan_id) . "&action=scan_popup");
     exit();

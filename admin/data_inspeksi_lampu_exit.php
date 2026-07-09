@@ -9,9 +9,16 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     exit();
 }
 
-$bulan  = isset($_GET['bulan']) ? $_GET['bulan'] : date('F');
+$peta_bulan = [
+    'Januari' => 1, 'Februari' => 2, 'Maret' => 3, 'April' => 4,
+    'Mei' => 5, 'Juni' => 6, 'Juli' => 7, 'Agustus' => 8,
+    'September' => 9, 'Oktober' => 10, 'November' => 11, 'Desember' => 12
+];
+
+$bulan  = isset($_GET['bulan']) ? $_GET['bulan'] : array_search((int)date('n'), $peta_bulan);
 $tahun  = isset($_GET['tahun']) ? (int)$_GET['tahun'] : (int)date('Y');
 $cari   = isset($_GET['cari'])  ? trim($_GET['cari']) : '';
+$bulan_angka = $peta_bulan[$bulan] ?? (int)date('n');
 
 /* ---- HAPUS ---- */
 if (isset($_GET['hapus']) && is_numeric($_GET['hapus'])) {
@@ -25,17 +32,16 @@ if (isset($_GET['hapus']) && is_numeric($_GET['hapus'])) {
 }
 
 /* ---- QUERY DATA ---- */
-$sql = "SELECT i.id_inspeksi, u.nama_lengkap, i.tanggal_cek,
+$sql = "SELECT i.id_inspeksi, i.nama_operator, i.tanggal_cek,
                              i.id_lampu, i.kondisi_fisik, i.kondisi_lampu, i.kondisi_tulisan, i.keterangan
                       FROM inspeksi_lampu_exit i
-                      LEFT JOIN users u ON i.id_user = u.id_user
-                      WHERE MONTHNAME(i.tanggal_cek) = ? AND YEAR(i.tanggal_cek) = ?";
-$param_types  = "si";
-$param_values = [$bulan, $tahun];
+                      WHERE MONTH(i.tanggal_cek) = ? AND YEAR(i.tanggal_cek) = ?";
+$param_types  = "ii";
+$param_values = [$bulan_angka, $tahun];
 
 if ($cari !== '') {
     $like = "%$cari%";
-    $sql .= " AND (u.nama_lengkap LIKE ? OR i.id_lampu LIKE ?)";
+    $sql .= " AND (i.nama_operator LIKE ? OR i.id_lampu LIKE ?)";
     $param_types .= "s";
     $param_values[] = $like;
     $param_types .= "s";

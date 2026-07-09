@@ -9,9 +9,18 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     exit();
 }
 
+$nama_bulan_map = [
+    'Januari' => 1, 'Februari' => 2, 'Maret' => 3, 'April' => 4,
+    'Mei' => 5, 'Juni' => 6, 'Juli' => 7, 'Agustus' => 8,
+    'September' => 9, 'Oktober' => 10, 'November' => 11, 'Desember' => 12
+];
+
 $bulan  = isset($_GET['bulan']) ? $_GET['bulan'] : date('F');
 $tahun  = isset($_GET['tahun']) ? (int)$_GET['tahun'] : (int)date('Y');
 $cari   = isset($_GET['cari'])  ? trim($_GET['cari']) : '';
+
+// $bulan dikirim dalam bahasa Indonesia (dari laporan_p3k.php), jadi diubah ke angka bulan
+$bulan_angka = $nama_bulan_map[$bulan] ?? (int)date('n');
 
 /* ---- HAPUS ---- */
 if (isset($_GET['hapus']) && is_numeric($_GET['hapus'])) {
@@ -25,22 +34,21 @@ if (isset($_GET['hapus']) && is_numeric($_GET['hapus'])) {
 }
 
 /* ---- QUERY DATA BERDASARKAN MASTER P3K ---- */
-$sql = "SELECT i.id_inspeksi, u.nama_lengkap, i.tanggal_inspeksi,
+$sql = "SELECT i.id_inspeksi, i.username AS nama_operator, i.tanggal_inspeksi,
                m.code AS code_p3k, m.lokasi, i.line_area,
                i.kondisi_kotak, i.kelengkapan_isi, i.expired_obat, i.keterangan
         FROM master_p3k m
         LEFT JOIN inspeksi_p3k i ON m.code = i.code_p3k 
-             AND MONTHNAME(i.tanggal_inspeksi) = ? 
-             AND YEAR(i.tanggal_inspeksi) = ?
-        LEFT JOIN users u ON i.id_user = u.id_user";
+             AND MONTH(i.tanggal_inspeksi) = ? 
+             AND YEAR(i.tanggal_inspeksi) = ?";
 
-$param_types  = "si";
-$param_values = [$bulan, $tahun];
+$param_types  = "ii";
+$param_values = [$bulan_angka, $tahun];
 
 if ($cari !== '') {
     $like = "%$cari%";
     // Menggunakan WHERE karena kondisi sebelumnya sudah dipindahkan ke blok ON pada LEFT JOIN
-    $sql .= " WHERE (u.nama_lengkap LIKE ? OR m.code LIKE ? OR m.lokasi LIKE ? OR i.line_area LIKE ?)";
+    $sql .= " WHERE (i.username LIKE ? OR m.code LIKE ? OR m.lokasi LIKE ? OR i.line_area LIKE ?)";
     $param_types .= "ssss";
     $param_values[] = $like;
     $param_values[] = $like;
@@ -64,7 +72,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
     header('Content-Disposition: attachment; filename="Laporan_Kotak_P3K_' . $bulan . '_' . $tahun . '.csv"');
     $out = fopen('php://output', 'w');
     fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
-    fputcsv($out, ['No', 'Nama Inspektor', 'Tanggal Inspeksi', 'Kode P3K', 'Lokasi', 'Line / Area', 'Kondisi Kotak', 'Kelengkapan Isi', 'Expired Obat', 'Keterangan']);
+    fputcsv($out, ['No', 'Nama Operator', 'Tanggal Inspeksi', 'Kode P3K', 'Lokasi', 'Line / Area', 'Kondisi Kotak', 'Kelengkapan Isi', 'Expired Obat', 'Keterangan']);
     $no = 1;
     foreach ($rows as $r) {
         $vals = array_values($r);
@@ -584,7 +592,7 @@ foreach ($rows as $r) {
                     <thead>
                         <tr>
                             <th>No</th>
-                            <th>Nama Inspektor</th>
+                            <th>Nama Operator</th>
                             <th>Tanggal Inspeksi</th>
                             <th>Kode P3K</th>
                             <th>Lokasi</th>
