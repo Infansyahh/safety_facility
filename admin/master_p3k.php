@@ -48,11 +48,11 @@ if (isset($_GET['action']) && $_GET['action'] == 'scan_popup' && isset($_GET['sc
         if ($query_cek_inspeksi && mysqli_num_rows($query_cek_inspeksi) > 0) {
             $row_inspeksi = mysqli_fetch_assoc($query_cek_inspeksi);
             $tanggal_terakhir = $row_inspeksi['tanggal_inspeksi'];
-            
+
             $tanggal_bisa_kembali = date('d F Y', strtotime($tanggal_terakhir . ' + 1 month'));
             $tanggal_terakhir_indo = date('d F Y', strtotime($tanggal_terakhir));
 
-            $scan_data = null; 
+            $scan_data = null;
             $error_scan_message = "Maaf, Alat dengan kode '$code_p3k' sudah diinspeksi pada $tanggal_terakhir_indo. Berdasarkan aturan 1 bulan sekali, alat ini baru bisa diinspeksi kembali pada tanggal $tanggal_bisa_kembali!";
         }
     } else {
@@ -62,16 +62,30 @@ if (isset($_GET['action']) && $_GET['action'] == 'scan_popup' && isset($_GET['sc
 
 $hari_ini = date('l');
 $daftar_hari = [
-    'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa', 
-    'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'
+    'Sunday' => 'Minggu',
+    'Monday' => 'Senin',
+    'Tuesday' => 'Selasa',
+    'Wednesday' => 'Rabu',
+    'Thursday' => 'Kamis',
+    'Friday' => 'Jumat',
+    'Saturday' => 'Sabtu'
 ];
 $hari_indo = $daftar_hari[$hari_ini] ?? $hari_ini;
 
 $bulan_ini = date('F');
 $daftar_bulan = [
-    'January' => 'Januari', 'February' => 'Februari', 'March' => 'Maret', 'April' => 'April', 
-    'May' => 'Mei', 'June' => 'Juni', 'July' => 'Juli', 'August' => 'Agustus', 
-    'September' => 'September', 'October' => 'Oktober', 'November' => 'November', 'December' => 'Desember'
+    'January' => 'Januari',
+    'February' => 'Februari',
+    'March' => 'Maret',
+    'April' => 'April',
+    'May' => 'Mei',
+    'June' => 'Juni',
+    'July' => 'Juli',
+    'August' => 'Agustus',
+    'September' => 'September',
+    'October' => 'Oktober',
+    'November' => 'November',
+    'December' => 'Desember'
 ];
 $bulan_indo = $daftar_bulan[$bulan_ini] ?? $bulan_ini;
 
@@ -92,7 +106,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             background: #fff;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, .1);
             overflow-x: auto;
             overflow-y: hidden;
             white-space: nowrap;
@@ -104,6 +118,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             border-collapse: collapse;
             margin-top: 10px;
         }
+
         thead tr {
             background-color: #004ef5;
             color: white;
@@ -139,10 +154,22 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             transition: 0.3s;
         }
 
-        .btn-barcode { background-color: #17a2b8; }
-        .btn-edit { background-color: #ffc107; color: #000; }
-        .btn-delete { background-color: #dc3545; }
-        .table-action-btn:hover { opacity: 0.8; }
+        .btn-barcode {
+            background-color: #17a2b8;
+        }
+
+        .btn-edit {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .btn-delete {
+            background-color: #dc3545;
+        }
+
+        .table-action-btn:hover {
+            opacity: 0.8;
+        }
 
         .radio-group {
             display: flex;
@@ -150,6 +177,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             margin-top: 5px;
             margin-bottom: 5px;
         }
+
         .radio-group label {
             display: flex;
             align-items: center;
@@ -157,6 +185,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             cursor: pointer;
             font-weight: 500;
         }
+
         .radio-group input[type="radio"] {
             cursor: pointer;
             width: 16px;
@@ -203,7 +232,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                     <li><a href="area_line_eyewash.php"> Eye Wash</a></li>
                 </ul>
             </li>
-            
+
             <li><a href="aktivitas.php"><i class="fa-solid fa-clock-rotate-left"></i> <span>Aktivitas Pengguna</span></a></li>
             <li><a href="agenda.php"><i class="fa-solid fa-calendar-check"></i> <span>Agenda Inspeksi</span></a></li>
 
@@ -224,6 +253,8 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             <li style="margin-top: 20px;"><a href="../logout.php"><i class="fa-solid fa-right-from-bracket"></i> <span>Log out</span></a></li>
         </ul>
     </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <main class="main-content">
         <header class="topbar">
@@ -324,7 +355,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                     <label style="font-weight:600;">Departemen (Area Line):</label><br>
                     <select name="line_area" required style="width:100%; padding:8px; box-sizing: border-box; margin-top:4px;">
                         <option value="">-- Pilih Departemen --</option>
-                        <?php foreach($daftar_area as $area): ?>
+                        <?php foreach ($daftar_area as $area): ?>
                             <option value="<?= htmlspecialchars($area); ?>"><?= htmlspecialchars($area); ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -333,7 +364,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                     <label style="font-weight:600;">Lokasi:</label><br>
                     <input type="text" name="lokasi" required style="width:100%; padding:8px; box-sizing: border-box; margin-top:4px;">
                 </div>
-                
+
                 <div style="margin-bottom:12px;">
                     <label style="font-weight:600;">Kondisi Kotak P3K:</label>
                     <div class="radio-group">
@@ -380,7 +411,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                     <label style="font-weight:600;">Departemen (Area Line):</label><br>
                     <select name="line_area" id="edit_line_area" required style="width:100%; padding:8px; box-sizing: border-box; margin-top:4px;">
                         <option value="">-- Pilih Departemen --</option>
-                        <?php foreach($daftar_area as $area): ?>
+                        <?php foreach ($daftar_area as $area): ?>
                             <option value="<?= htmlspecialchars($area); ?>"><?= htmlspecialchars($area); ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -389,7 +420,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                     <label style="font-weight:600;">Lokasi:</label><br>
                     <input type="text" name="lokasi" id="edit_lokasi" required style="width:100%; padding:8px; box-sizing: border-box; margin-top:4px;">
                 </div>
-                
+
                 <div style="margin-bottom:12px;">
                     <label style="font-weight:600;">Kondisi Kotak P3K:</label>
                     <div class="radio-group">
@@ -460,13 +491,18 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
             sidebar.classList.toggle('minimized');
-            const mainContent = document.querySelector('.main-content');
-            if (sidebar.classList.contains('minimized')) {
-                mainContent.style.marginLeft = '70px';
-            } else {
-                mainContent.style.marginLeft = '230px';
+            const isOpen = sidebar.classList.contains('minimized');
+
+            if (window.innerWidth <= 768) {
+                // Mobile: "minimized" = sidebar kebuka. Overlay nongol biar bisa klik luar buat tutup.
+                overlay.classList.toggle('show', isOpen);
+                return;
             }
+
+            const mainContent = document.querySelector('.main-content');
+            mainContent.style.marginLeft = isOpen ? '70px' : '230px';
         }
 
         function toggleSubmenu(element) {
@@ -482,23 +518,23 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             document.getElementById('edit_code').value = code;
             document.getElementById('edit_line_area').value = departemen;
             document.getElementById('edit_lokasi').value = lokasi;
-            
+
             // Logika mencentang Pilihan Kondisi Kotak
-            if(kondisi_kotak.toLowerCase() === 'baik') {
+            if (kondisi_kotak.toLowerCase() === 'baik') {
                 document.getElementById('edit_kondisi_kotak_baik').checked = true;
             } else {
                 document.getElementById('edit_kondisi_kotak_tidak').checked = true;
             }
 
             // Logika mencentang Pilihan Kelengkapan Isi
-            if(kelengkapan_isi.toLowerCase() === 'lengkap') {
+            if (kelengkapan_isi.toLowerCase() === 'lengkap') {
                 document.getElementById('edit_kelengkapan_isi_lengkap').checked = true;
             } else {
                 document.getElementById('edit_kelengkapan_isi_tidak').checked = true;
             }
 
             // Logika mencentang Pilihan Expired Obat
-            if(expired_obat.toLowerCase() === 'lengkap') {
+            if (expired_obat.toLowerCase() === 'lengkap') {
                 document.getElementById('edit_expired_obat_lengkap').checked = true;
             } else {
                 document.getElementById('edit_expired_obat_tidak').checked = true;
@@ -526,4 +562,5 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
         }
     </script>
 </body>
+
 </html>

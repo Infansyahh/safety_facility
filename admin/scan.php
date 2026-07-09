@@ -151,7 +151,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
 
             const mainContent = document.querySelector('.main-content');
             mainContent.style.marginLeft = isOpen ? '70px' : '230px';
-        }
+        }   
 
         // --- GANTI BAGIAN INI ---
         let html5QrcodeScanner = new Html5QrcodeScanner("reader", {

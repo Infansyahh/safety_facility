@@ -256,6 +256,8 @@ $tanggal_format = $dh[date('l')] . ", " . date('d') . " " . $db[date('F')] . " "
     </ul>
 </aside>
 
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
 <main class="main-content">
     <header class="topbar">
         <div class="topbar-left">
