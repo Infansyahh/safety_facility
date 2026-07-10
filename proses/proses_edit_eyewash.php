@@ -19,11 +19,10 @@ if (isset($_POST['submit'])) {
 
     // Fallback jika input catatan kosong (diambil langsung dari gabungan radio button)
     if (empty($catatan)) {
-        $air    = $_POST['cek_air_edit'];
-        $fisik  = $_POST['cek_fisik_edit'];
-        $nozzle = $_POST['cek_nozzle_edit'];
-        $pedal  = $_POST['cek_pedal_edit'];
-        $catatan = $air . ", " . $fisik . ", " . $nozzle . ", " . $pedal;
+        $air        = $_POST['cek_air_edit'];
+        $kondisiAir = $_POST['cek_kondisi_air_edit'];
+        $kotak      = $_POST['cek_kotak_edit'];
+        $catatan = $air . ", " . $kondisiAir . ", " . $kotak;
         $catatan = mysqli_real_escape_string($koneksi, $catatan);
     }
 

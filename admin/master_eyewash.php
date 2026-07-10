@@ -302,10 +302,9 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                             <th>Kode Eye Wash</th>
                             <th>Area / Line (Lokasi)</th>
                             <th>Catatan</th>
-                            <th>Aliran Air</th>
-                            <th>Kebersihan Air</th>
-                            <th>Penutup Nozzle</th>
-                            <th>Pedal Operasional</th>
+                            <th>Aliran Air (15 Menit)</th>
+                            <th>Kondisi Air</th>
+                            <th>Kondisi Kotak</th>
                             <th>Kondisi Akhir</th>
                             <th style="width: 10%">Aksi</th>
                         </tr>
@@ -322,14 +321,13 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                                 $safeCatatan = htmlspecialchars($row['catatan'] ?? '', ENT_QUOTES);
 
                                 // LOGIKA MEMECAH CATATAN MENJADI PARAMETER TERPISAH DI TABEL
-                                $val_air = '-'; $val_kebersihan = '-'; $val_nozzle = '-'; $val_pedal = '-';
+                                $val_air = '-'; $val_kondisi_air = '-'; $val_kotak = '-';
                                 if (!empty($row['catatan'])) {
                                     $parts = explode(', ', $row['catatan']);
-                                    if (count($parts) == 4) {
+                                    if (count($parts) == 3) {
                                         $val_air = htmlspecialchars($parts[0]);
-                                        $val_kebersihan = htmlspecialchars($parts[1]);
-                                        $val_nozzle = htmlspecialchars($parts[2]);
-                                        $val_pedal = htmlspecialchars($parts[3]);
+                                        $val_kondisi_air = htmlspecialchars($parts[1]);
+                                        $val_kotak = htmlspecialchars($parts[2]);
                                     } else {
                                         // Fallback jika catatan diubah manual dan tidak memakai format koma standar
                                         $val_air = htmlspecialchars($row['catatan']);
@@ -343,9 +341,8 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                                     <td><?= htmlspecialchars($row['lokasi']); ?></td>
                                     <td><?= !empty($row['catatan']) ? htmlspecialchars($row['catatan']) : '-'; ?></td>
                                     <td><?= $val_air; ?></td>
-                                    <td><?= $val_kebersihan; ?></td>
-                                    <td><?= $val_nozzle; ?></td>
-                                    <td><?= $val_pedal; ?></td>
+                                    <td><?= $val_kondisi_air; ?></td>
+                                    <td><?= $val_kotak; ?></td>
                                     <td>
                                         <?php if (strtolower($safeKondisi) == 'baik') : ?>
                                             <span style="background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Baik</span>
@@ -369,7 +366,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                                 </tr>
                         <?php }
                         } else {
-                            echo "<tr><td colspan='11' style='text-align:center;'>Tidak ada data master eyewash tersedia</td></tr>";
+                            echo "<tr><td colspan='10' style='text-align:center;'>Tidak ada data master eyewash tersedia</td></tr>";
                         }
                         ?>
                     </tbody>
@@ -399,28 +396,22 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                 <div class="checklist-box">
                     <label style="font-weight:700; color:#004ef5;">Parameter Cek Fisik Eyewash:</label>
                     
-                    <span class="checklist-title">1. Aliran & Tekanan Air</span>
+                    <span class="checklist-title">1. Aliran Air selama 15 Menit</span>
                     <div class="radio-group">
                         <label><input type="radio" name="cek_air_tambah" value="Aliran Lancar" checked onclick="hitungOtomatisTambah()"> Lancar</label>
-                        <label><input type="radio" name="cek_air_tambah" value="Aliran Sumbat/Lemah" onclick="hitungOtomatisTambah()"> Macet/Lemah</label>
+                        <label><input type="radio" name="cek_air_tambah" value="Aliran Tidak Lancar" onclick="hitungOtomatisTambah()"> Tidak Lancar</label>
                     </div>
 
-                    <span class="checklist-title">2. Kebersihan Air & Basin mangkok</span>
+                    <span class="checklist-title">2. Kondisi Air</span>
                     <div class="radio-group">
-                        <label><input type="radio" name="cek_fisik_tambah" value="Air Bersih" checked onclick="hitungOtomatisTambah()"> Bersih</label>
-                        <label><input type="radio" name="cek_fisik_tambah" value="Air Kotor/Berlumut" onclick="hitungOtomatisTambah()"> Kotor/Keruh</label>
+                        <label><input type="radio" name="cek_kondisi_air_tambah" value="Air Bersih" checked onclick="hitungOtomatisTambah()"> Bersih</label>
+                        <label><input type="radio" name="cek_kondisi_air_tambah" value="Air Kotor" onclick="hitungOtomatisTambah()"> Kotor</label>
                     </div>
 
-                    <span class="checklist-title">3. Penutup Nozzle Spray (Dust Cover)</span>
+                    <span class="checklist-title">3. Kondisi Kotak Eyewash</span>
                     <div class="radio-group">
-                        <label><input type="radio" name="cek_nozzle_tambah" value="Nozzle Lengkap" checked onclick="hitungOtomatisTambah()"> Ada & Baik</label>
-                        <label><input type="radio" name="cek_nozzle_tambah" value="Nozzle Rusak/Hilang" onclick="hitungOtomatisTambah()"> Rusak/Hilang</label>
-                    </div>
-
-                    <span class="checklist-title">4. Tuas/Pedal Push Operasional</span>
-                    <div class="radio-group">
-                        <label><input type="radio" name="cek_pedal_tambah" value="Pedal Berfungsi" checked onclick="hitungOtomatisTambah()"> Berfungsi</label>
-                        <label><input type="radio" name="cek_pedal_tambah" value="Pedal Macet" onclick="hitungOtomatisTambah()"> Macet/Rusak</label>
+                        <label><input type="radio" name="cek_kotak_tambah" value="Kotak Bagus" checked onclick="hitungOtomatisTambah()"> Bagus</label>
+                        <label><input type="radio" name="cek_kotak_tambah" value="Kotak Tidak Bagus" onclick="hitungOtomatisTambah()"> Tidak Bagus</label>
                     </div>
                 </div>
 
@@ -434,7 +425,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
 
                 <div style="margin-bottom:15px;">
                     <label style="font-weight:600;">Catatan Detail (Bisa diedit manual):</label><br>
-                    <textarea name="catatan" id="tambah_catatan" style="width:100%; padding:8px; box-sizing: border-box; margin-top:4px;" rows="3">Aliran Lancar, Air Bersih, Nozzle Lengkap, Pedal Berfungsi</textarea>
+                    <textarea name="catatan" id="tambah_catatan" style="width:100%; padding:8px; box-sizing: border-box; margin-top:4px;" rows="3">Aliran Lancar, Air Bersih, Kotak Bagus</textarea>
                 </div>
 
                 <button type="submit" name="submit" style="background:#004ef5; color:white; border:none; padding:10px 15px; border-radius:4px; cursor:pointer;">Simpan</button>
@@ -465,28 +456,22 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                 <div class="checklist-box">
                     <label style="font-weight:700; color:#ffc107;">Update Parameter Cek Eyewash:</label>
                     
-                    <span class="checklist-title">1. Aliran & Tekanan Air</span>
+                    <span class="checklist-title">1. Aliran Air selama 15 Menit</span>
                     <div class="radio-group">
                         <label><input type="radio" name="cek_air_edit" id="edit_air_lancar" value="Aliran Lancar" checked onclick="hitungOtomatisEdit()"> Lancar</label>
-                        <label><input type="radio" name="cek_air_edit" id="edit_air_sumbat" value="Aliran Sumbat/Lemah" onclick="hitungOtomatisEdit()"> Macet/Lemah</label>
+                        <label><input type="radio" name="cek_air_edit" id="edit_air_tidak_lancar" value="Aliran Tidak Lancar" onclick="hitungOtomatisEdit()"> Tidak Lancar</label>
                     </div>
 
-                    <span class="checklist-title">2. Kebersihan Air & Basin</span>
+                    <span class="checklist-title">2. Kondisi Air</span>
                     <div class="radio-group">
-                        <label><input type="radio" name="cek_fisik_edit" id="edit_fisik_bersih" value="Air Bersih" checked onclick="hitungOtomatisEdit()"> Bersih</label>
-                        <label><input type="radio" name="cek_fisik_edit" id="edit_fisik_kotor" value="Air Kotor/Berlumut" onclick="hitungOtomatisEdit()"> Kotor/Keruh</label>
+                        <label><input type="radio" name="cek_kondisi_air_edit" id="edit_kondisi_air_bersih" value="Air Bersih" checked onclick="hitungOtomatisEdit()"> Bersih</label>
+                        <label><input type="radio" name="cek_kondisi_air_edit" id="edit_kondisi_air_kotor" value="Air Kotor" onclick="hitungOtomatisEdit()"> Kotor</label>
                     </div>
 
-                    <span class="checklist-title">3. Penutup Nozzle Spray (Dust Cover)</span>
+                    <span class="checklist-title">3. Kondisi Kotak Eyewash</span>
                     <div class="radio-group">
-                        <label><input type="radio" name="cek_nozzle_edit" id="edit_nozzle_ada" value="Nozzle Lengkap" checked onclick="hitungOtomatisEdit()"> Ada & Baik</label>
-                        <label><input type="radio" name="cek_nozzle_edit" id="edit_nozzle_rusak" value="Nozzle Rusak/Hilang" onclick="hitungOtomatisEdit()"> Rusak/Hilang</label>
-                    </div>
-
-                    <span class="checklist-title">4. Tuas/Pedal Push Operasional</span>
-                    <div class="radio-group">
-                        <label><input type="radio" name="cek_pedal_edit" id="edit_pedal_baik" value="Pedal Berfungsi" checked onclick="hitungOtomatisEdit()"> Berfungsi</label>
-                        <label><input type="radio" name="cek_pedal_edit" id="edit_pedal_macet" value="Pedal Macet" onclick="hitungOtomatisEdit()"> Macet/Rusak</label>
+                        <label><input type="radio" name="cek_kotak_edit" id="edit_kotak_bagus" value="Kotak Bagus" checked onclick="hitungOtomatisEdit()"> Bagus</label>
+                        <label><input type="radio" name="cek_kotak_edit" id="edit_kotak_tidak_bagus" value="Kotak Tidak Bagus" onclick="hitungOtomatisEdit()"> Tidak Bagus</label>
                     </div>
                 </div>
 
@@ -566,30 +551,28 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
 
         function hitungOtomatisTambah() {
             let air = document.querySelector('input[name="cek_air_tambah"]:checked').value;
-            let fisik = document.querySelector('input[name="cek_fisik_tambah"]:checked').value;
-            let nozzle = document.querySelector('input[name="cek_nozzle_tambah"]:checked').value;
-            let pedal = document.querySelector('input[name="cek_pedal_tambah"]:checked').value;
+            let kondisiAir = document.querySelector('input[name="cek_kondisi_air_tambah"]:checked').value;
+            let kotak = document.querySelector('input[name="cek_kotak_tambah"]:checked').value;
 
-            if(air.includes("Sumbat") || fisik.includes("Kotor") || nozzle.includes("Rusak") || pedal.includes("Macet")) {
+            if(air.includes("Tidak Lancar") || kondisiAir.includes("Kotor") || kotak.includes("Tidak Bagus")) {
                 document.getElementById('tambah_kondisi_rusak').checked = true;
             } else {
                 document.getElementById('tambah_kondisi_baik').checked = true;
             }
-            document.getElementById('tambah_catatan').value = air + ", " + fisik + ", " + nozzle + ", " + pedal;
+            document.getElementById('tambah_catatan').value = air + ", " + kondisiAir + ", " + kotak;
         }
 
         function hitungOtomatisEdit() {
             let air = document.querySelector('input[name="cek_air_edit"]:checked').value;
-            let fisik = document.querySelector('input[name="cek_fisik_edit"]:checked').value;
-            let nozzle = document.querySelector('input[name="cek_nozzle_edit"]:checked').value;
-            let pedal = document.querySelector('input[name="cek_pedal_edit"]:checked').value;
+            let kondisiAir = document.querySelector('input[name="cek_kondisi_air_edit"]:checked').value;
+            let kotak = document.querySelector('input[name="cek_kotak_edit"]:checked').value;
 
-            if(air.includes("Sumbat") || fisik.includes("Kotor") || nozzle.includes("Rusak") || pedal.includes("Macet")) {
+            if(air.includes("Tidak Lancar") || kondisiAir.includes("Kotor") || kotak.includes("Tidak Bagus")) {
                 document.getElementById('edit_kondisi_rusak').checked = true;
             } else {
                 document.getElementById('edit_kondisi_baik').checked = true;
             }
-            document.getElementById('edit_catatan').value = air + ", " + fisik + ", " + nozzle + ", " + pedal;
+            document.getElementById('edit_catatan').value = air + ", " + kondisiAir + ", " + kotak;
         }
 
         function bukaModalEdit(id, code, lokasi, kondisi, catatan) {
@@ -606,17 +589,14 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
 
             document.getElementById('edit_catatan').value = catatan;
 
-            if(catatan.includes("Sumbat")) document.getElementById('edit_air_sumbat').checked = true;
+            if(catatan.includes("Tidak Lancar")) document.getElementById('edit_air_tidak_lancar').checked = true;
             else document.getElementById('edit_air_lancar').checked = true;
 
-            if(catatan.includes("Kotor")) document.getElementById('edit_fisik_kotor').checked = true;
-            else document.getElementById('edit_fisik_bersih').checked = true;
+            if(catatan.includes("Kotor")) document.getElementById('edit_kondisi_air_kotor').checked = true;
+            else document.getElementById('edit_kondisi_air_bersih').checked = true;
 
-            if(catatan.includes("Rusak")) document.getElementById('edit_nozzle_rusak').checked = true;
-            else document.getElementById('edit_nozzle_ada').checked = true;
-
-            if(catatan.includes("Macet")) document.getElementById('edit_pedal_macet').checked = true;
-            else document.getElementById('edit_pedal_baik').checked = true;
+            if(catatan.includes("Tidak Bagus")) document.getElementById('edit_kotak_tidak_bagus').checked = true;
+            else document.getElementById('edit_kotak_bagus').checked = true;
         }
 
         function konfirmasiHapus(id) {
