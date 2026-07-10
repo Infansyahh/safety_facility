@@ -174,7 +174,8 @@ if ($q_stat) {
 
 /* Data master untuk dropdown form */
 $list_lampu  = mysqli_query($koneksi, "SELECT code, lokasi FROM master_lampu ORDER BY lokasi ASC");
-$list_line  = mysqli_query($koneksi, "SELECT id_departemen AS id_line, nama_departemen AS nama_line FROM departemen ORDER BY nama_departemen ASC");
+/* PERUBAHAN: Mengambil data dari tabel area_line */
+$list_line  = mysqli_query($koneksi, "SELECT id_line, nama_line FROM area_line ORDER BY nama_line ASC");
 $list_user  = mysqli_query($koneksi, "SELECT id_user, nama_lengkap FROM users ORDER BY nama_lengkap ASC");
 
 /* Tanggal hari ini, format Indonesia (sama seperti index.php) */
@@ -669,7 +670,6 @@ function badge_status($status)
         </section>
     </main>
 
-    <!-- MODAL TAMBAH -->
     <div class="modal-overlay" id="modalTambah">
         <div class="modal-box">
             <h3><i class="fa-solid fa-calendar-plus"></i> Tambah Agenda Inspeksi</h3>
@@ -731,7 +731,6 @@ function badge_status($status)
         </div>
     </div>
 
-    <!-- MODAL EDIT -->
     <div class="modal-overlay" id="modalEdit">
         <div class="modal-box">
             <h3><i class="fa-solid fa-pen"></i> Edit Agenda Inspeksi</h3>
@@ -758,7 +757,15 @@ function badge_status($status)
                 </div>
                 <div class="form-group">
                     <label>Area / Line</label>
-                    <input type="text" name="line_area" id="edit_line_area" required>
+                    <select name="line_area" id="edit_line_area" required>
+                        <option value="">-- Pilih Area / Line --</option>
+                        <?php
+                        mysqli_data_seek($list_line, 0);
+                        while ($l = mysqli_fetch_assoc($list_line)):
+                        ?>
+                            <option value="<?= htmlspecialchars($l['nama_line']); ?>"><?= htmlspecialchars($l['nama_line']); ?></option>
+                        <?php endwhile; ?>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Item / ID Lampu (opsional)</label>
