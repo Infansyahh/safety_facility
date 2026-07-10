@@ -22,7 +22,7 @@ $query = mysqli_query($koneksi, "SELECT * FROM master_eyewash WHERE id = $id");
 $data = mysqli_fetch_assoc($query);
 if (!$data) die("Data Eye Wash tidak ditemukan.");
 
-$templatePath = '../foto/template_barcode.png';
+$templatePath = '../foto/template_barcode_eyewash.png';
 if (!file_exists($templatePath)) die("Error: File template tidak ditemukan.");
 
 $tempDir = "../proses/temp_qr/";

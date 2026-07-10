@@ -9,22 +9,69 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     exit();
 }
 
-// QUERY UTAMA: Mengambil data dari master_lampu yang kodenya berawalan 'LE'
-// dan digabungkan dengan data inspeksi terakhir dari inspeksi_lampu
-$query = mysqli_query($koneksi, "SELECT ml.*, il.username, il.tanggal_inspeksi 
-    FROM master_lampu ml
+// ==== SEARCH & PAGINATION ====
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+$limit_options = [10, 25, 50, 100];
+if (!in_array($limit, $limit_options)) {
+    $limit = 10;
+}
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) {
+    $page = 1;
+}
+$offset = ($page - 1) * $limit;
+
+$search_sql = '';
+if ($search !== '') {
+    $s = mysqli_real_escape_string($koneksi, $search);
+    $search_sql = " AND (ml.code LIKE '%$s%' OR ml.line_area LIKE '%$s%' OR ml.lokasi LIKE '%$s%' OR ml.catatan LIKE '%$s%' OR il.username LIKE '%$s%')";
+}
+
+$join_sql = "FROM master_lampu ml
     LEFT JOIN (
         SELECT code_lampu, username, tanggal_inspeksi 
         FROM inspeksi_lampu 
         WHERE id_inspeksi IN (SELECT MAX(id_inspeksi) FROM inspeksi_lampu GROUP BY code_lampu)
     ) il ON ml.code = il.code_lampu
-    WHERE ml.code LIKE 'LE%'");
+    WHERE ml.code LIKE 'LE%'" . $search_sql;
+
+// Hitung total data buat pagination
+$query_total = mysqli_query($koneksi, "SELECT COUNT(*) AS total $join_sql");
+$total_rows = 0;
+if ($query_total) {
+    $total_rows = (int) mysqli_fetch_assoc($query_total)['total'];
+}
+$total_pages = $total_rows > 0 ? (int) ceil($total_rows / $limit) : 1;
+if ($page > $total_pages) {
+    $page = $total_pages;
+    $offset = ($page - 1) * $limit;
+}
+
+// QUERY UTAMA: Mengambil data dari master_lampu yang kodenya berawalan 'LE'
+// dan digabungkan dengan data inspeksi terakhir dari inspeksi_lampu
+$query = mysqli_query($koneksi, "SELECT ml.*, il.username, il.tanggal_inspeksi $join_sql
+    ORDER BY ml.id ASC
+    LIMIT $limit OFFSET $offset");
 
 // Ambil data departemen secara dinamis dari area line lampu exit
 $query_area = mysqli_query($koneksi, "SELECT nama_line FROM area_line WHERE jenis = 'lampu_exit' ORDER BY nama_line ASC");
 $daftar_area = [];
 while ($area = mysqli_fetch_assoc($query_area)) {
     $daftar_area[] = $area['nama_line'];
+}
+
+// LOGIKA GENERATE KODE LAMPU EXIT OTOMATIS (LE01, LE02, dst)
+$query_max_code = mysqli_query($koneksi, "SELECT code FROM master_lampu WHERE code LIKE 'LE%' ORDER BY id DESC LIMIT 1");
+$next_code = "LE01"; // Default jika belum ada data sama sekali
+if ($query_max_code && mysqli_num_rows($query_max_code) > 0) {
+    $row_max = mysqli_fetch_assoc($query_max_code);
+    $max_code = $row_max['code'];
+
+    $num = (int)substr($max_code, 2);
+    $next_num = $num + 1;
+
+    $next_code = "LE" . sprintf("%02d", $next_num);
 }
 
 $scan_data = null;
@@ -284,10 +331,34 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                 <button onclick="window.location.href='../export/excel_exit.php'" style="background: #20c000; border:none; padding:10px 15px; margin-bottom: 10px; color:white; border-radius:5px; cursor:pointer;">📤 Export Data Ke Excel</button>
             </div>
 
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+                <form method="GET" style="display:flex; align-items:center; gap:8px;">
+                    <input type="text" name="search" value="<?= htmlspecialchars($search); ?>" placeholder="Cari kode, departemen, lokasi, inspektor..." style="padding:8px; border:1px solid #ccc; border-radius:4px; width:280px;">
+                    <input type="hidden" name="limit" value="<?= $limit; ?>">
+                    <button type="submit" style="background:#004ef5; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">
+                        <i class="fa-solid fa-magnifying-glass"></i> Cari
+                    </button>
+                    <?php if ($search !== ''): ?>
+                        <a href="lampu_exit.php?limit=<?= $limit; ?>" style="padding:8px 12px; border:1px solid #ccc; background:#fff; border-radius:4px; text-decoration:none; color:#333;">Reset</a>
+                    <?php endif; ?>
+                </form>
+                <form method="GET" style="display:flex; align-items:center; gap:8px;">
+                    <input type="hidden" name="search" value="<?= htmlspecialchars($search); ?>">
+                    <label style="font-weight:600;">Tampilkan:</label>
+                    <select name="limit" onchange="this.form.submit()" style="padding:8px; border:1px solid #ccc; border-radius:4px;">
+                        <?php foreach ($limit_options as $opt): ?>
+                            <option value="<?= $opt; ?>" <?= $limit == $opt ? 'selected' : ''; ?>><?= $opt; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <span>data</span>
+                </form>
+            </div>
+
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
+                            
                             <th style="width: 5%">No</th>
                             <th>Inspektor</th>
                             <th>Kode</th>
@@ -300,7 +371,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                     </thead>
                     <tbody>
                         <?php
-                        $no = 1;
+                        $no = $offset + 1;
                         if ($query && mysqli_num_rows($query) > 0) {
                             while ($row = mysqli_fetch_assoc($query)) {
                                 $safeCode = htmlspecialchars($row['code'], ENT_QUOTES);
@@ -342,11 +413,44 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                                 </tr>
                         <?php }
                         } else {
-                            echo "<tr><td colspan='8' style='text-align:center;'>Tidak ada data master Lampu Exit tersedia</td></tr>";
+                            echo "<tr><td colspan='9' style='text-align:center;'>Tidak ada data master Lampu Exit tersedia</td></tr>";
                         }
                         ?>
                     </tbody>
                 </table>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:12px;">
+                <div>
+                    Menampilkan <?= $total_rows > 0 ? ($offset + 1) : 0; ?>-<?= min($offset + $limit, $total_rows); ?> dari <?= $total_rows; ?> data
+                </div>
+                <?php if ($total_pages > 1): ?>
+                    <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                        <?php
+                        $base_params = [];
+                        if ($search !== '') $base_params['search'] = $search;
+                        $base_params['limit'] = $limit;
+
+                        function buildPageUrl($page_num, $base_params)
+                        {
+                            $params = $base_params;
+                            $params['page'] = $page_num;
+                            return 'lampu_exit.php?' . http_build_query($params);
+                        }
+                        ?>
+                        <?php if ($page > 1): ?>
+                            <a href="<?= buildPageUrl($page - 1, $base_params); ?>" style="padding:8px 12px; border:1px solid #ccc; background:#fff; border-radius:4px; text-decoration:none; color:#333;">&laquo; Sebelumnya</a>
+                        <?php endif; ?>
+
+                        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                            <a href="<?= buildPageUrl($i, $base_params); ?>" style="padding:8px 12px; border:1px solid <?= $i == $page ? '#004ef5' : '#ccc'; ?>; background:<?= $i == $page ? '#004ef5' : '#fff'; ?>; color:<?= $i == $page ? '#fff' : '#333'; ?>; border-radius:4px; text-decoration:none; font-weight:<?= $i == $page ? '700' : '400'; ?>;"><?= $i; ?></a>
+                        <?php endfor; ?>
+
+                        <?php if ($page < $total_pages): ?>
+                            <a href="<?= buildPageUrl($page + 1, $base_params); ?>" style="padding:8px 12px; border:1px solid #ccc; background:#fff; border-radius:4px; text-decoration:none; color:#333;">Selanjutnya &raquo;</a>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             </div>
         </section>
     </main>
@@ -356,8 +460,8 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             <h3>Tambah Data Lampu Exit</h3>
             <form action="../proses/proses_tambah_lampu.php" method="POST">
                 <div style="margin-bottom:12px;">
-                    <label style="font-weight:600;">Kode (Gunakan awalan LE, contoh: LE01):</label><br>
-                    <input type="text" name="code" placeholder="LE01" required style="width:100%; padding:8px; box-sizing: border-box; margin-top:4px;">
+                    <label style="font-weight:600;">Kode (Otomatis):</label><br>
+                    <input type="text" name="code" value="<?= $next_code; ?>" readonly style="width:100%; padding:8px; box-sizing: border-box; margin-top:4px; background-color: #e9ecef; cursor: not-allowed; font-weight: bold; border: 1px solid #ccc; border-radius: 4px;">
                 </div>
                 <div style="margin-bottom:12px;">
                     <label style="font-weight:600;">Departemen (Area Line):</label><br>
@@ -527,6 +631,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             btnDownload.href = srtPath;
             btnDownload.download = 'Barcode_' + code + '.png';
         }
+    
     </script>
 </body>
 

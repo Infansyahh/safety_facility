@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 include '../koneksi.php';
 
@@ -15,9 +15,18 @@ $cari   = isset($_GET['cari'])  ? trim($_GET['cari']) : '';
 
 /* ---- MAP NAMA BULAN INDONESIA KE ANGKA ---- */
 $peta_bulan = [
-    'Januari' => 1, 'Februari' => 2, 'Maret' => 3, 'April' => 4,
-    'Mei' => 5, 'Juni' => 6, 'Juli' => 7, 'Agustus' => 8,
-    'September' => 9, 'Oktober' => 10, 'November' => 11, 'Desember' => 12
+    'Januari' => 1,
+    'Februari' => 2,
+    'Maret' => 3,
+    'April' => 4,
+    'Mei' => 5,
+    'Juni' => 6,
+    'Juli' => 7,
+    'Agustus' => 8,
+    'September' => 9,
+    'Oktober' => 10,
+    'November' => 11,
+    'Desember' => 12
 ];
 $bulan_angka = $peta_bulan[$bulan] ?? (int)date('n');
 
@@ -62,37 +71,63 @@ $total = count($rows);
 
 /* ---- EXPORT EXCEL ---- */
 if (isset($_GET['export']) && $_GET['export'] === 'excel') {
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="Laporan_Eye_Wash_' . $bulan . '_' . $tahun . '.csv"');
-    $out = fopen('php://output', 'w');
-    fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
-    fputcsv($out, ['No', 'Nama Inspektor', 'Tanggal Inspeksi', 'Kode Eye Wash', 'Lokasi', 'Kondisi', 'Catatan']);
+    require '../vendor/autoload.php';
+    require '../export_excel_helper.php';
+
+    $headers = ['No', 'Nama Inspektor', 'Tanggal Inspeksi', 'Kode Eye Wash', 'Lokasi', 'Aliran Air', 'Kondisi Air', 'Kondisi Kotak', 'Catatan'];
+    $data = [];
     $no = 1;
     foreach ($rows as $r) {
-        fputcsv($out, [
+        $val_air = '-'; $val_kondisi_air = '-'; $val_kotak = '-';
+        if (!empty($r['catatan'])) {
+            $parts = explode(', ', $r['catatan']);
+            if (count($parts) == 3) {
+                $val_air = $parts[0];
+                $val_kondisi_air = $parts[1];
+                $val_kotak = $parts[2];
+            } else {
+                $val_air = $r['catatan'];
+            }
+        }
+        $data[] = [
             $no++,
             $r['nama_lengkap'] ?? '-',
             $r['tanggal_inspeksi'],
             $r['code_eyewash'],
             $r['lokasi'] ?? '-',
-            $r['kondisi'],
+            $val_air,
+            $val_kondisi_air,
+            $val_kotak,
             $r['catatan']
-        ]);
+        ];
     }
-    fclose($out);
+    export_excel_xlsx($headers, $data, 'Laporan_Eye_Wash_' . $bulan . '_' . $tahun);
     exit();
 }
 
 /* ---- FORMAT TANGGAL ---- */
 $dh = [
-    'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa',
-    'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'
+    'Sunday' => 'Minggu',
+    'Monday' => 'Senin',
+    'Tuesday' => 'Selasa',
+    'Wednesday' => 'Rabu',
+    'Thursday' => 'Kamis',
+    'Friday' => 'Jumat',
+    'Saturday' => 'Sabtu'
 ];
 $db = [
-    'January' => 'Januari', 'February' => 'Februari', 'March' => 'Maret',
-    'April' => 'April', 'May' => 'Mei', 'June' => 'Juni', 'July' => 'Juli',
-    'August' => 'Agustus', 'September' => 'September', 'October' => 'Oktober',
-    'November' => 'November', 'December' => 'Desember'
+    'January' => 'Januari',
+    'February' => 'Februari',
+    'March' => 'Maret',
+    'April' => 'April',
+    'May' => 'Mei',
+    'June' => 'Juni',
+    'July' => 'Juli',
+    'August' => 'Agustus',
+    'September' => 'September',
+    'October' => 'Oktober',
+    'November' => 'November',
+    'December' => 'Desember'
 ];
 $tanggal_format = $dh[date('l')] . ", " . date('d') . " " . $db[date('F')] . " " . date('Y');
 $bulan_indo = $db[$bulan] ?? $bulan;
@@ -120,48 +155,306 @@ foreach ($rows as $r) {
     <link rel="stylesheet" href="style.css">
     <style>
         /* Style bawaan Anda tetap dipertahankan */
-        .page-head { display: flex; align-items: center; gap: 16px; background: #fff; border-radius: 14px; padding: 20px 26px; margin-bottom: 22px; box-shadow: 0 2px 8px rgba(0, 0, 0, .05); border-left: 6px solid #3b82f6; }
-        .ph-icon { width: 52px; height: 52px; border-radius: 11px; background: #dbeafe; color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
-        .ph-info h2 { font-size: 18px; font-weight: 700; color: #1e293b; }
-        .ph-info p { font-size: 13px; color: #64748b; margin-top: 3px; }
-        .stats-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
-        .s-card { background: #fff; border-radius: 10px; padding: 14px 20px; box-shadow: 0 2px 6px rgba(0, 0, 0, .05); display: flex; align-items: center; gap: 12px; min-width: 155px; }
-        .s-icon { width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #fff; flex-shrink: 0; }
-        .s-info h4 { font-size: 11px; color: #64748b; font-weight: 500; }
-        .s-info p { font-size: 20px; font-weight: 700; color: #1e293b; }
-        .action-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-        .ab-left, .ab-right { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-        .btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: 8px; border: none; font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none; font-family: inherit; white-space: nowrap; }
-        .btn-back { background: #64748b; color: #fff; }
-        .btn-excel { background: #1d6f42; color: #fff; }
-        .btn-pdf { background: #c0392b; color: #fff; }
-        .btn-back:hover { background: #475569; }
-        .btn-excel:hover { background: #155534; }
-        .btn-pdf:hover { background: #a93226; }
-        .btn-search { background: #3b82f6; color: #fff; }
-        .btn-reset { background: #e2e8f0; color: #64748b; }
-        .search-wrap { display: flex; gap: 7px; }
-        .search-wrap input { padding: 9px 14px; border: 1px solid #d8dee9; border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; width: 240px; }
-        .table-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, .06); overflow-x: auto; }
-        table.dt { width: 100%; border-collapse: collapse; min-width: 880px; }
-        table.dt thead tr { background: #1e293b; }
-        table.dt th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: .5px; color: #94a3b8; padding: 13px 15px; font-weight: 600; white-space: nowrap; }
-        table.dt td { padding: 12px 15px; font-size: 13px; color: #334155; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-        table.dt tr:last-child td { border-bottom: none; }
-        table.dt tbody tr:hover td { background: #f8fafc; }
-        table.dt tbody tr:nth-child(even) td { background: #fafbfd; }
-        table.dt tbody tr:nth-child(even):hover td { background: #f1f5f9; }
-        .no-col { width: 46px; text-align: center; font-weight: 600; color: #94a3b8; }
-        .td-date { white-space: nowrap; }
-        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
-        .b-green { background: #ddf3e8; color: #1e9e63; }
-        .b-red { background: #fbe2e1; color: #d33a39; }
-        .btn-del { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 7px; background: #fbe2e1; color: #d33a39; border: none; cursor: pointer; text-decoration: none; font-size: 13px; transition: background .2s; }
-        .btn-del:hover { background: #d33a39; color: #fff; }
-        .empty-state { text-align: center; padding: 60px 20px; color: #94a3b8; }
-        .empty-state i { font-size: 48px; margin-bottom: 14px; display: block; }
-        .alert-ok { background: #ddf3e8; color: #1e9e63; padding: 12px 18px; border-radius: 8px; margin-bottom: 18px; font-size: 13.5px; }
-        @media print { .sidebar, .topbar, .action-bar, .btn-del { display: none !important; } table.dt thead tr { background: #1e293b !important; -webkit-print-color-adjust: exact; } }
+        .page-head {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: #fff;
+            border-radius: 14px;
+            padding: 20px 26px;
+            margin-bottom: 22px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
+            border-left: 6px solid #3b82f6;
+        }
+
+        .ph-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 11px;
+            background: #dbeafe;
+            color: #3b82f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .ph-info h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .ph-info p {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 3px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .s-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 14px 20px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .05);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 155px;
+        }
+
+        .s-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .s-info h4 {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .s-info p {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .action-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .ab-left,
+        .ab-right {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 18px;
+            border-radius: 8px;
+            border: none;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        .btn-back {
+            background: #64748b;
+            color: #fff;
+        }
+
+        .btn-excel {
+            background: #1d6f42;
+            color: #fff;
+        }
+
+        .btn-pdf {
+            background: #c0392b;
+            color: #fff;
+        }
+
+        .btn-back:hover {
+            background: #475569;
+        }
+
+        .btn-excel:hover {
+            background: #155534;
+        }
+
+        .btn-pdf:hover {
+            background: #a93226;
+        }
+
+        .btn-search {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .btn-reset {
+            background: #e2e8f0;
+            color: #64748b;
+        }
+
+        .search-wrap {
+            display: flex;
+            gap: 7px;
+        }
+
+        .search-wrap input {
+            padding: 9px 14px;
+            border: 1px solid #d8dee9;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            width: 240px;
+        }
+
+        .table-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+            overflow-x: auto;
+        }
+
+        table.dt {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 880px;
+        }
+
+        table.dt thead tr {
+            background: #1e293b;
+        }
+
+        table.dt th {
+            text-align: left;
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: #94a3b8;
+            padding: 13px 15px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        table.dt td {
+            padding: 12px 15px;
+            font-size: 13px;
+            color: #334155;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        table.dt tr:last-child td {
+            border-bottom: none;
+        }
+
+        table.dt tbody tr:hover td {
+            background: #f8fafc;
+        }
+
+        table.dt tbody tr:nth-child(even) td {
+            background: #fafbfd;
+        }
+
+        table.dt tbody tr:nth-child(even):hover td {
+            background: #f1f5f9;
+        }
+
+        .no-col {
+            width: 46px;
+            text-align: center;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+
+        .td-date {
+            white-space: nowrap;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .b-green {
+            background: #ddf3e8;
+            color: #1e9e63;
+        }
+
+        .b-red {
+            background: #fbe2e1;
+            color: #d33a39;
+        }
+
+        .btn-del {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            background: #fbe2e1;
+            color: #d33a39;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 13px;
+            transition: background .2s;
+        }
+
+        .btn-del:hover {
+            background: #d33a39;
+            color: #fff;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 14px;
+            display: block;
+        }
+
+        .alert-ok {
+            background: #ddf3e8;
+            color: #1e9e63;
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            font-size: 13.5px;
+        }
+
+        @media print {
+
+            .sidebar,
+            .topbar,
+            .action-bar,
+            .btn-del {
+                display: none !important;
+            }
+
+            table.dt thead tr {
+                background: #1e293b !important;
+                -webkit-print-color-adjust: exact;
+            }
+        }
     </style>
 </head>
 
@@ -306,27 +599,39 @@ foreach ($rows as $r) {
                             <th>Tanggal Inspeksi</th>
                             <th>Kode Eye Wash</th>
                             <th>Lokasi</th>
-                            <th>Kondisi</th>
+                            <th>Aliran Air</th>
+                            <th>Kondisi Air</th>
+                            <th>Kondisi Kotak</th>
                             <th>Catatan</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if ($total > 0): ?>
-                            <?php $no = 1; foreach ($rows as $r): ?>
+                            <?php $no = 1;
+                            foreach ($rows as $r): ?>
                                 <tr>
                                     <td class="no-col"><?= $no++; ?></td>
                                     <td><?= htmlspecialchars($r['nama_lengkap'] ?? '-'); ?></td>
                                     <td class="td-date"><?= date('d-m-Y', strtotime($r['tanggal_inspeksi'])); ?></td>
                                     <td><?= htmlspecialchars($r['code_eyewash']); ?></td>
                                     <td><?= htmlspecialchars($r['lokasi'] ?? '-'); ?></td>
-                                    <td>
-                                        <?php if (strtolower($r['kondisi']) === 'baik'): ?>
-                                            <span class="badge b-green">Baik</span>
-                                        <?php else: ?>
-                                            <span class="badge b-red"><?= htmlspecialchars($r['kondisi']); ?></span>
-                                        <?php endif; ?>
-                                    </td>
+                                    <?php
+                                        $val_air = '-'; $val_kondisi_air = '-'; $val_kotak = '-';
+                                        if (!empty($r['catatan'])) {
+                                            $parts = explode(', ', $r['catatan']);
+                                            if (count($parts) == 3) {
+                                                $val_air = $parts[0];
+                                                $val_kondisi_air = $parts[1];
+                                                $val_kotak = $parts[2];
+                                            } else {
+                                                $val_air = $r['catatan'];
+                                            }
+                                        }
+                                    ?>
+                                    <td><span class="badge <?= stripos($val_air, 'Tidak') !== false ? 'b-red' : 'b-green'; ?>"><?= htmlspecialchars($val_air); ?></span></td>
+                                    <td><span class="badge <?= stripos($val_kondisi_air, 'Kotor') !== false ? 'b-red' : 'b-green'; ?>"><?= htmlspecialchars($val_kondisi_air); ?></span></td>
+                                    <td><span class="badge <?= stripos($val_kotak, 'Tidak') !== false ? 'b-red' : 'b-green'; ?>"><?= htmlspecialchars($val_kotak); ?></span></td>
                                     <td><?= htmlspecialchars($r['catatan'] !== '' ? $r['catatan'] : '-'); ?></td>
                                     <td>
                                         <a href="data_inspeksi_eyewash.php?bulan=<?= urlencode($bulan); ?>&tahun=<?= $tahun; ?>&cari=<?= urlencode($cari); ?>&hapus=<?= $r['id_inspeksi']; ?>"
@@ -339,7 +644,7 @@ foreach ($rows as $r) {
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="8">
+                                <td colspan="10">
                                     <div class="empty-state">
                                         <i class="fa-solid fa-folder-open"></i>
                                         <p>Tidak ada data inspeksi Eye Wash untuk <?= $bulan_indo . " " . $tahun; ?></p>
@@ -392,4 +697,5 @@ foreach ($rows as $r) {
         }
     </script>
 </body>
+
 </html>

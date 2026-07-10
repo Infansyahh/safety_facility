@@ -8,4 +8,3 @@ $koneksi = mysqli_connect($host, $user, $pass, $db_name);
 if (!$koneksi) {
     die("Koneksi ke database 'safety_facility' gagal: " . mysqli_connect_error());
 }
-?>

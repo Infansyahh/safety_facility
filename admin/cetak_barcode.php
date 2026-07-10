@@ -29,7 +29,7 @@ if ($type === 'p3k') {
     if (!$data) die("Data lampu tidak ditemukan.");
 }
 
-$templatePath = '../foto/template_barcode.png'; 
+$templatePath = ($type === 'p3k') ? '../foto/template_barcode_p3k.png' : '../foto/template_barcode.png';
 if (!file_exists($templatePath)) die("Error: File template tidak ditemukan.");
 
 $tempDir = "../proses/temp_qr/";

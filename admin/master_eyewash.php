@@ -9,7 +9,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     exit();
 }
 
-// 1. AMBIL DATA AREA / LINE UNTUK DROPDOWN DEPARTEMEN
+// 1. AMBIL DATA DEPARTEMEN (AREA LINE EYEWASH) UNTUK DROPDOWN
 $query_line = mysqli_query($koneksi, "SELECT nama_line FROM area_line WHERE jenis = 'eyewash' ORDER BY nama_line ASC");
 $list_line = [];
 if ($query_line) {
@@ -31,13 +31,48 @@ if ($query_max_code && mysqli_num_rows($query_max_code) > 0) {
     $next_code = "EYE" . sprintf("%02d", $next_num);
 }
 
-// Query untuk mengambil data master eyewash beserta data inspeksi terakhir
-$query = mysqli_query($koneksi, "SELECT me.*, ie.username, ie.tanggal_inspeksi FROM master_eyewash me
+// ==== SEARCH & PAGINATION ====
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+$limit_options = [10, 25, 50, 100];
+if (!in_array($limit, $limit_options)) {
+    $limit = 10;
+}
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) {
+    $page = 1;
+}
+$offset = ($page - 1) * $limit;
+
+$search_sql = '';
+if ($search !== '') {
+    $s = mysqli_real_escape_string($koneksi, $search);
+    $search_sql = " WHERE (me.code LIKE '%$s%' OR me.line_area LIKE '%$s%' OR me.lokasi LIKE '%$s%' OR me.catatan LIKE '%$s%' OR ie.username LIKE '%$s%')";
+}
+
+$join_sql = "FROM master_eyewash me
     LEFT JOIN (
         SELECT code_eyewash, username, tanggal_inspeksi 
         FROM inspeksi_eyewash 
         WHERE id_inspeksi IN (SELECT MAX(id_inspeksi) FROM inspeksi_eyewash GROUP BY code_eyewash)
-    ) ie ON me.code = ie.code_eyewash");
+    ) ie ON me.code = ie.code_eyewash" . $search_sql;
+
+// Hitung total data buat pagination
+$query_total = mysqli_query($koneksi, "SELECT COUNT(*) AS total $join_sql");
+$total_rows = 0;
+if ($query_total) {
+    $total_rows = (int) mysqli_fetch_assoc($query_total)['total'];
+}
+$total_pages = $total_rows > 0 ? (int) ceil($total_rows / $limit) : 1;
+if ($page > $total_pages) {
+    $page = $total_pages;
+    $offset = ($page - 1) * $limit;
+}
+
+// Query untuk mengambil data master eyewash beserta data inspeksi terakhir
+$query = mysqli_query($koneksi, "SELECT me.*, ie.username, ie.tanggal_inspeksi $join_sql
+    ORDER BY me.id ASC
+    LIMIT $limit OFFSET $offset");
 
 $scan_data = null;
 $error_scan_message = "";
@@ -293,14 +328,39 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                 <button onclick="window.location.href='../export/excel_eyewash.php'" style="background: #20c000; border:none; padding:10px 15px; margin-bottom: 10px; color:white; border-radius:5px; cursor:pointer;">📤 Export Data Ke Excel</button>
             </div>
 
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+                <form method="GET" style="display:flex; align-items:center; gap:8px;">
+                    <input type="text" name="search" value="<?= htmlspecialchars($search); ?>" placeholder="Cari kode, departemen, lokasi, inspektor..." style="padding:8px; border:1px solid #ccc; border-radius:4px; width:280px;">
+                    <input type="hidden" name="limit" value="<?= $limit; ?>">
+                    <button type="submit" style="background:#004ef5; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">
+                        <i class="fa-solid fa-magnifying-glass"></i> Cari
+                    </button>
+                    <?php if ($search !== ''): ?>
+                        <a href="master_eyewash.php?limit=<?= $limit; ?>" style="padding:8px 12px; border:1px solid #ccc; background:#fff; border-radius:4px; text-decoration:none; color:#333;">Reset</a>
+                    <?php endif; ?>
+                </form>
+                <form method="GET" style="display:flex; align-items:center; gap:8px;">
+                    <input type="hidden" name="search" value="<?= htmlspecialchars($search); ?>">
+                    <label style="font-weight:600;">Tampilkan:</label>
+                    <select name="limit" onchange="this.form.submit()" style="padding:8px; border:1px solid #ccc; border-radius:4px;">
+                        <?php foreach ($limit_options as $opt): ?>
+                            <option value="<?= $opt; ?>" <?= $limit == $opt ? 'selected' : ''; ?>><?= $opt; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <span>data</span>
+                </form>
+            </div>
+
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
+                            
                             <th style="width: 3%">No</th>
                             <th>Inspektor</th>
                             <th>Kode Eye Wash</th>
-                            <th>Area / Line (Lokasi)</th>
+                            <th>Departemen</th>
+                            <th>Lokasi</th>
                             <th>Catatan</th>
                             <th>Aliran Air (15 Menit)</th>
                             <th>Kondisi Air</th>
@@ -311,12 +371,13 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                     </thead>
                     <tbody>
                         <?php
-                        $no = 1;
+                        $no = $offset + 1;
                         if ($query && mysqli_num_rows($query) > 0) {
                             while ($row = mysqli_fetch_assoc($query)) {
                                 $safeId = $row['id'];
                                 $safeCode = htmlspecialchars($row['code'], ENT_QUOTES);
                                 $safeLokasi = htmlspecialchars($row['lokasi'], ENT_QUOTES);
+                                $safeLineArea = htmlspecialchars($row['line_area'] ?? '', ENT_QUOTES);
                                 $safeKondisi = htmlspecialchars($row['kondisi'], ENT_QUOTES);
                                 $safeCatatan = htmlspecialchars($row['catatan'] ?? '', ENT_QUOTES);
 
@@ -338,6 +399,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                                     <td><?= $no++; ?></td>
                                     <td><?= !empty($row['username']) ? htmlspecialchars($row['username']) : '<span style="color:#999; font-style:italic;">Belum Diinspeksi</span>'; ?></td>
                                     <td><strong><?= htmlspecialchars($row['code']); ?></strong></td>
+                                    <td><?= !empty($row['line_area']) ? htmlspecialchars($row['line_area']) : '-'; ?></td>
                                     <td><?= htmlspecialchars($row['lokasi']); ?></td>
                                     <td><?= !empty($row['catatan']) ? htmlspecialchars($row['catatan']) : '-'; ?></td>
                                     <td><?= $val_air; ?></td>
@@ -355,7 +417,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                                             <i class="fa-solid fa-barcode"></i>
                                         </button>
 
-                                        <button type="button" class="table-action-btn btn-edit" onclick="bukaModalEdit(<?= $safeId; ?>, '<?= $safeCode; ?>', '<?= $safeLokasi; ?>', '<?= $safeKondisi; ?>', '<?= $safeCatatan; ?>')">
+                                        <button type="button" class="table-action-btn btn-edit" onclick="bukaModalEdit(<?= $safeId; ?>, '<?= $safeCode; ?>', '<?= $safeLineArea; ?>', '<?= $safeLokasi; ?>', '<?= $safeKondisi; ?>', '<?= $safeCatatan; ?>')">
                                             <i class="fa-solid fa-pencil"></i>
                                         </button>
 
@@ -366,11 +428,44 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                                 </tr>
                         <?php }
                         } else {
-                            echo "<tr><td colspan='10' style='text-align:center;'>Tidak ada data master eyewash tersedia</td></tr>";
+                            echo "<tr><td colspan='12' style='text-align:center;'>Tidak ada data master eyewash tersedia</td></tr>";
                         }
                         ?>
                     </tbody>
                 </table>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:12px;">
+                <div>
+                    Menampilkan <?= $total_rows > 0 ? ($offset + 1) : 0; ?>-<?= min($offset + $limit, $total_rows); ?> dari <?= $total_rows; ?> data
+                </div>
+                <?php if ($total_pages > 1): ?>
+                    <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                        <?php
+                        $base_params = [];
+                        if ($search !== '') $base_params['search'] = $search;
+                        $base_params['limit'] = $limit;
+
+                        function buildPageUrl($page_num, $base_params)
+                        {
+                            $params = $base_params;
+                            $params['page'] = $page_num;
+                            return 'master_eyewash.php?' . http_build_query($params);
+                        }
+                        ?>
+                        <?php if ($page > 1): ?>
+                            <a href="<?= buildPageUrl($page - 1, $base_params); ?>" style="padding:8px 12px; border:1px solid #ccc; background:#fff; border-radius:4px; text-decoration:none; color:#333;">&laquo; Sebelumnya</a>
+                        <?php endif; ?>
+
+                        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                            <a href="<?= buildPageUrl($i, $base_params); ?>" style="padding:8px 12px; border:1px solid <?= $i == $page ? '#004ef5' : '#ccc'; ?>; background:<?= $i == $page ? '#004ef5' : '#fff'; ?>; color:<?= $i == $page ? '#fff' : '#333'; ?>; border-radius:4px; text-decoration:none; font-weight:<?= $i == $page ? '700' : '400'; ?>;"><?= $i; ?></a>
+                        <?php endfor; ?>
+
+                        <?php if ($page < $total_pages): ?>
+                            <a href="<?= buildPageUrl($page + 1, $base_params); ?>" style="padding:8px 12px; border:1px solid #ccc; background:#fff; border-radius:4px; text-decoration:none; color:#333;">Selanjutnya &raquo;</a>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             </div>
         </section>
     </main>
@@ -384,13 +479,18 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                     <input type="text" name="code" value="<?= $next_code; ?>" readonly style="width:100%; padding:8px; box-sizing: border-box; margin-top:4px; background-color: #e9ecef; cursor: not-allowed; font-weight: bold; border: 1px solid #ccc; border-radius: 4px;">
                 </div>
                 <div style="margin-bottom:12px;">
-                    <label style="font-weight:600;">Area / Line (Departemen):</label><br>
-                    <select name="lokasi" required class="form-input-dropdown">
-                        <option value="">-- Pilih Area Line --</option>
+                    <label style="font-weight:600;">Departemen:</label><br>
+                    <select name="line_area" required class="form-input-dropdown">
+                        <option value="">-- Pilih Departemen --</option>
                         <?php foreach ($list_line as $line) : ?>
                             <option value="<?= htmlspecialchars($line); ?>"><?= htmlspecialchars($line); ?></option>
                         <?php endforeach; ?>
                     </select>
+                </div>
+
+                <div style="margin-bottom:12px;">
+                    <label style="font-weight:600;">Lokasi:</label><br>
+                    <input type="text" name="lokasi" required placeholder="Contoh: Dekat Pintu Masuk Office 1" style="width:100%; padding:8px; box-sizing: border-box; margin-top:4px; border: 1px solid #ccc; border-radius: 4px;">
                 </div>
 
                 <div class="checklist-box">
@@ -444,13 +544,18 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                     <input type="text" name="code" id="edit_code" required style="width:100%; padding:8px; box-sizing: border-box; margin-top:4px;">
                 </div>
                 <div style="margin-bottom:12px;">
-                    <label style="font-weight:600;">Area / Line (Departemen):</label><br>
-                    <select name="lokasi" id="edit_lokasi" required class="form-input-dropdown">
-                        <option value="">-- Pilih Area Line --</option>
+                    <label style="font-weight:600;">Departemen:</label><br>
+                    <select name="line_area" id="edit_line_area" required class="form-input-dropdown">
+                        <option value="">-- Pilih Departemen --</option>
                         <?php foreach ($list_line as $line) : ?>
                             <option value="<?= htmlspecialchars($line); ?>"><?= htmlspecialchars($line); ?></option>
                         <?php endforeach; ?>
                     </select>
+                </div>
+
+                <div style="margin-bottom:12px;">
+                    <label style="font-weight:600;">Lokasi:</label><br>
+                    <input type="text" name="lokasi" id="edit_lokasi" required style="width:100%; padding:8px; box-sizing: border-box; margin-top:4px; border: 1px solid #ccc; border-radius: 4px;">
                 </div>
 
                 <div class="checklist-box">
@@ -502,7 +607,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                 <img id="img_barcode_preview" src="" alt="Barcode Preview" style="max-width: 100%; height: auto; display: block;">
             </div>
             <br>
-            <a id="btn_download_barcode" href="javascript:void(0)" download="barcode_eyewash.png" style="background:#28a745; color:white; text-decoration:none; padding:10px 20px; border-radius:5px; display:inline-block; margin-right: 10px; font-weight: 600;">
+            <a id="btn_download_barcode" href="javascript:void(0)" download="template_barcode_eyewash.png" style="background:#28a745; color:white; text-decoration:none; padding:10px 20px; border-radius:5px; display:inline-block; margin-right: 10px; font-weight: 600;">
                 <i class="fa-solid fa-download"></i> Download as Image
             </a>
             <button type="button" onclick="document.getElementById('modalBarcode').style.display='none'" style="padding:10px 20px; border-radius:5px; border:1px solid #ccc; cursor:pointer; background:#fff;">Tutup</button>
@@ -517,11 +622,12 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             <?php elseif ($scan_data): ?>
                 var id = "<?= $scan_data['id']; ?>";
                 var code = <?= json_encode($scan_data['code']); ?>;
+                var lineArea = <?= json_encode($scan_data['line_area'] ?? ''); ?>;
                 var lokasi = <?= json_encode($scan_data['lokasi']); ?>;
                 var kondisi = <?= json_encode($scan_data['kondisi']); ?>;
                 var catatan = <?= json_encode($scan_data['catatan'] ?? ''); ?>;
 
-                bukaModalEdit(id, code, lokasi, kondisi, catatan);
+                bukaModalEdit(id, code, lineArea, lokasi, kondisi, catatan);
                 document.getElementById('modalEditTitle').innerHTML = "📋 Isi Data Hasil Scan Eye Wash";
             <?php endif; ?>
         }
@@ -575,10 +681,11 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             document.getElementById('edit_catatan').value = air + ", " + kondisiAir + ", " + kotak;
         }
 
-        function bukaModalEdit(id, code, lokasi, kondisi, catatan) {
+        function bukaModalEdit(id, code, lineArea, lokasi, kondisi, catatan) {
             document.getElementById('modalEdit').style.display = 'block';
             document.getElementById('edit_id').value = id;
             document.getElementById('edit_code').value = code;
+            document.getElementById('edit_line_area').value = lineArea;
             document.getElementById('edit_lokasi').value = lokasi;
 
             if (kondisi.toLowerCase() === 'baik') {
@@ -618,6 +725,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             btnDownload.href = srtPath;
             btnDownload.download = 'Barcode_Eyewash_' + code + '.png';
         }
+    
     </script>
 </body>
 </html>

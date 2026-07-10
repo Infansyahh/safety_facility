@@ -11,10 +11,11 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 }
 
 if (isset($_POST['submit'])) {
-    $id      = mysqli_real_escape_string($koneksi, $_POST['id']);
-    $code    = mysqli_real_escape_string($koneksi, $_POST['code']);
-    $lokasi  = mysqli_real_escape_string($koneksi, $_POST['lokasi']);
-    $kondisi = mysqli_real_escape_string($koneksi, $_POST['kondisi']);
+    $id        = mysqli_real_escape_string($koneksi, $_POST['id']);
+    $code      = mysqli_real_escape_string($koneksi, $_POST['code']);
+    $line_area = mysqli_real_escape_string($koneksi, $_POST['line_area']);
+    $lokasi    = mysqli_real_escape_string($koneksi, $_POST['lokasi']);
+    $kondisi   = mysqli_real_escape_string($koneksi, $_POST['kondisi']);
     $catatan = mysqli_real_escape_string($koneksi, $_POST['catatan']);
 
     // Fallback jika input catatan kosong (diambil langsung dari gabungan radio button)
@@ -31,7 +32,7 @@ if (isset($_POST['submit'])) {
     $operator = mysqli_real_escape_string($koneksi, $operator);
 
     // Query update ke tabel master_eyewash berdasarkan ID
-    $query = "UPDATE master_eyewash SET code = '$code', lokasi = '$lokasi', kondisi = '$kondisi', catatan = '$catatan' WHERE id = '$id'";
+    $query = "UPDATE master_eyewash SET code = '$code', line_area = '$line_area', lokasi = '$lokasi', kondisi = '$kondisi', catatan = '$catatan' WHERE id = '$id'";
     $update = mysqli_query($koneksi, $query);
 
     if ($update) {

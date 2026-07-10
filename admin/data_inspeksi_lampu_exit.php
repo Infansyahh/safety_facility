@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 include '../koneksi.php';
 
@@ -10,9 +10,18 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 }
 
 $peta_bulan = [
-    'Januari' => 1, 'Februari' => 2, 'Maret' => 3, 'April' => 4,
-    'Mei' => 5, 'Juni' => 6, 'Juli' => 7, 'Agustus' => 8,
-    'September' => 9, 'Oktober' => 10, 'November' => 11, 'Desember' => 12
+    'Januari' => 1,
+    'Februari' => 2,
+    'Maret' => 3,
+    'April' => 4,
+    'Mei' => 5,
+    'Juni' => 6,
+    'Juli' => 7,
+    'Agustus' => 8,
+    'September' => 9,
+    'Oktober' => 10,
+    'November' => 11,
+    'Desember' => 12
 ];
 
 $bulan  = isset($_GET['bulan']) ? $_GET['bulan'] : array_search((int)date('n'), $peta_bulan);
@@ -59,19 +68,19 @@ $total = count($rows);
 
 /* ---- EXPORT EXCEL ---- */
 if (isset($_GET['export']) && $_GET['export'] === 'excel') {
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="Laporan_Lampu_Exit_' . $bulan . '_' . $tahun . '.csv"');
-    $out = fopen('php://output', 'w');
-    fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
-    fputcsv($out, ['No', 'Nama Inspektor', 'Tanggal Inspeksi', 'ID Lampu', 'Kondisi Fisik', 'Kondisi Lampu', 'Kondisi Tulisan', 'Keterangan']);
+    require '../vendor/autoload.php';
+    require '../export_excel_helper.php';
+
+    $headers = ['No', 'Nama Inspektor', 'Tanggal Inspeksi', 'ID Lampu', 'Kondisi Fisik', 'Kondisi Lampu', 'Kondisi Tulisan', 'Keterangan'];
+    $data = [];
     $no = 1;
     foreach ($rows as $r) {
         $vals = array_values($r);
         array_shift($vals);
         array_unshift($vals, $no++);
-        fputcsv($out, $vals);
+        $data[] = $vals;
     }
-    fclose($out);
+    export_excel_xlsx($headers, $data, 'Laporan_Lampu_Exit_' . $bulan . '_' . $tahun);
     exit();
 }
 

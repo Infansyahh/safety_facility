@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 include '../koneksi.php';
 
@@ -87,19 +87,19 @@ $total = count($rows);
 
 /* ---- EXPORT EXCEL ---- */
 if (isset($_GET['export']) && $_GET['export'] === 'excel') {
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="Laporan_Lampu_Emergency_' . $bulan_param . '_' . $tahun . '.csv"');
-    $out = fopen('php://output', 'w');
-    fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
-    fputcsv($out, ['No', 'Nama Operator', 'Tanggal Inspeksi', 'Code Lampu', 'Lokasi', 'Kondisi', 'Catatan']);
+    require '../vendor/autoload.php';
+    require '../export_excel_helper.php';
+
+    $headers = ['No', 'Nama Operator', 'Tanggal Inspeksi', 'Code Lampu', 'Lokasi', 'Kondisi', 'Catatan'];
+    $data = [];
     $no = 1;
     foreach ($rows as $r) {
         $vals = array_values($r);
         array_shift($vals);
         array_unshift($vals, $no++);
-        fputcsv($out, $vals);
+        $data[] = $vals;
     }
-    fclose($out);
+    export_excel_xlsx($headers, $data, 'Laporan_Lampu_Emergency_' . $bulan_param . '_' . $tahun);
     exit();
 }
 

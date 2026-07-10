@@ -11,9 +11,10 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 }
 
 if (isset($_POST['submit'])) {
-    $code    = mysqli_real_escape_string($koneksi, $_POST['code']);
-    $lokasi  = mysqli_real_escape_string($koneksi, $_POST['lokasi']);
-    $kondisi = mysqli_real_escape_string($koneksi, $_POST['kondisi']);
+    $code      = mysqli_real_escape_string($koneksi, $_POST['code']);
+    $line_area = mysqli_real_escape_string($koneksi, $_POST['line_area']);
+    $lokasi    = mysqli_real_escape_string($koneksi, $_POST['lokasi']);
+    $kondisi   = mysqli_real_escape_string($koneksi, $_POST['kondisi']);
     $catatan = mysqli_real_escape_string($koneksi, $_POST['catatan']);
 
     // Fallback jika input catatan kosong (diambil langsung dari gabungan radio button)
@@ -26,7 +27,7 @@ if (isset($_POST['submit'])) {
     }
 
     // Query simpan ke tabel master_eyewash
-    $query = "INSERT INTO master_eyewash (code, lokasi, kondisi, catatan) VALUES ('$code', '$lokasi', '$kondisi', '$catatan')";
+    $query = "INSERT INTO master_eyewash (code, line_area, lokasi, kondisi, catatan) VALUES ('$code', '$line_area', '$lokasi', '$kondisi', '$catatan')";
     $simpan = mysqli_query($koneksi, $query);
 
     if ($simpan) {
