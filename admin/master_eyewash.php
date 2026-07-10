@@ -298,14 +298,15 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                     <thead>
                         <tr>
                             <th style="width: 3%">No</th>
+                            <th>Inspektor</th>
                             <th>Kode Eye Wash</th>
-                            <th>Area / Line</th>
-                            <th>Aliran & Tekanan Air</th>
-                            <th>Kebersihan Air & Basin</th>
+                            <th>Area / Line (Lokasi)</th>
+                            <th>Catatan</th>
+                            <th>Aliran Air</th>
+                            <th>Kebersihan Air</th>
                             <th>Penutup Nozzle</th>
                             <th>Pedal Operasional</th>
                             <th>Kondisi Akhir</th>
-                            <th>Dicek Oleh</th>
                             <th style="width: 10%">Aksi</th>
                         </tr>
                     </thead>
@@ -337,8 +338,10 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                         ?>
                                 <tr>
                                     <td><?= $no++; ?></td>
+                                    <td><?= !empty($row['username']) ? htmlspecialchars($row['username']) : '<span style="color:#999; font-style:italic;">Belum Diinspeksi</span>'; ?></td>
                                     <td><strong><?= htmlspecialchars($row['code']); ?></strong></td>
                                     <td><?= htmlspecialchars($row['lokasi']); ?></td>
+                                    <td><?= !empty($row['catatan']) ? htmlspecialchars($row['catatan']) : '-'; ?></td>
                                     <td><?= $val_air; ?></td>
                                     <td><?= $val_kebersihan; ?></td>
                                     <td><?= $val_nozzle; ?></td>
@@ -350,7 +353,6 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                                             <span style="background: #f8d7da; color: #721c24; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Rusak</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td><?= !empty($row['username']) ? htmlspecialchars($row['username']) : '<span style="color:#999; font-style:italic;">Belum Dicek</span>'; ?></td>
                                     <td>
                                         <button type="button" class="table-action-btn btn-barcode" onclick="bukaModalBarcode(<?= $safeId; ?>, '<?= $safeCode; ?>')">
                                             <i class="fa-solid fa-barcode"></i>
@@ -367,7 +369,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                                 </tr>
                         <?php }
                         } else {
-                            echo "<tr><td colspan='10' style='text-align:center;'>Tidak ada data master eyewash tersedia</td></tr>";
+                            echo "<tr><td colspan='11' style='text-align:center;'>Tidak ada data master eyewash tersedia</td></tr>";
                         }
                         ?>
                     </tbody>

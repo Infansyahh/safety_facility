@@ -284,14 +284,14 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                     <thead>
                         <tr>
                             <th style="width: 5%">No</th>
+                            <th>Inspektor</th>
                             <th>Kode</th>
                             <th>Departemen</th>
                             <th>Lokasi</th>
+                            <th>Catatan</th>
                             <th>Kondisi Kotak</th>
                             <th>Isi Kotak</th>
                             <th>Obat-obatan</th>
-                            <th>Dicek Oleh</th>
-                            <th>Catatan</th>
                             <th style="width: 12%">Aksi</th>
                         </tr>
                     </thead>
@@ -310,14 +310,14 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                         ?>
                                 <tr>
                                     <td><?= $no++; ?></td>
+                                    <td><?= !empty($row['username']) ? htmlspecialchars($row['username']) : '<span style="color:#999; font-style:italic;">Belum Diinspeksi</span>'; ?></td>
                                     <td><?= htmlspecialchars($row['code']); ?></td>
                                     <td><?= !empty($row['line_area']) ? htmlspecialchars($row['line_area']) : '-'; ?></td>
                                     <td><?= htmlspecialchars($row['lokasi']); ?></td>
+                                    <td><?= !empty($row['catatan']) ? htmlspecialchars($row['catatan']) : '-'; ?></td>
                                     <td><?= (strtolower($safeKondisiKotak) == 'baik') ? 'Baik' : 'Tidak'; ?></td>
                                     <td><?= (strtolower($safeKelengkapanIsi) == 'lengkap') ? 'Lengkap' : 'Tidak'; ?></td>
                                     <td><?= (strtolower($safeExpiredObat) == 'lengkap') ? 'Lengkap' : 'Tidak'; ?></td>
-                                    <td><?= !empty($row['username']) ? htmlspecialchars($row['username']) : '<span style="color:#999; font-style:italic;">Belum Dicek</span>'; ?></td>
-                                    <td><?= !empty($row['catatan']) ? htmlspecialchars($row['catatan']) : '-'; ?></td>
                                     <td>
                                         <button type="button" class="table-action-btn btn-barcode" onclick="bukaModalBarcode(<?= $row['id']; ?>, '<?= $safeCode; ?>')">
                                             <i class="fa-solid fa-barcode"></i>
@@ -472,7 +472,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
     <script>
         window.onload = function() {
             <?php if (!empty($error_scan_message)): ?>
-                alert("âš ï¸ <?= addslashes($error_scan_message); ?>");
+                alert("⚠️ <?= addslashes($error_scan_message); ?>");
                 window.history.replaceState({}, document.title, window.location.pathname);
             <?php elseif ($scan_data): ?>
                 var id = "<?= $scan_data['id']; ?>";
@@ -485,7 +485,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                 var catatan = <?= json_encode($scan_data['catatan'] ?? ''); ?>;
 
                 bukaModalEdit(id, code, departemen, lokasi, kondisi_kotak, kelengkapan_isi, expired_obat, catatan);
-                document.getElementById('modalEditTitle').innerHTML = "ðŸ“‹ Isi Data Hasil Scan Kotak P3K";
+                document.getElementById('modalEditTitle').innerHTML = "📋 Isi Data Hasil Scan Kotak P3K";
             <?php endif; ?>
         }
 
