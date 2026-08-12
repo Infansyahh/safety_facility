@@ -153,7 +153,6 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             mainContent.style.marginLeft = isOpen ? '70px' : '230px';
         }   
 
-        // --- GANTI BAGIAN INI ---
         let html5QrcodeScanner = new Html5QrcodeScanner("reader", {
             fps: 15, // Dinaikkan sedikit agar pembacaan kamera lebih responsif
             qrbox: {

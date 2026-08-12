@@ -6,6 +6,7 @@ global $koneksi;
 
 if (isset($_POST['submit'])) {
     $code = mysqli_real_escape_string($koneksi, $_POST['code']);
+    $merek = mysqli_real_escape_string($koneksi, $_POST['merek'] ?? '');
     $line_area = mysqli_real_escape_string($koneksi, $_POST['line_area']);
     $lokasi = mysqli_real_escape_string($koneksi, $_POST['lokasi']);
     $catatan = mysqli_real_escape_string($koneksi, $_POST['catatan']);
@@ -23,8 +24,8 @@ if (isset($_POST['submit'])) {
         $kondisi = (strtolower($lampu_mati) == 'ya') ? 'rusak' : 'baik';
     }
 
-    $query = "INSERT INTO master_lampu (code, line_area, lokasi, indikator_mati_menyala, lampu_mati, nyala_otomatis, catatan, kondisi) 
-              VALUES ('$code', '$line_area', '$lokasi', '$indikator', '$lampu_mati', '$otomatis', '$catatan', '$kondisi')";
+    $query = "INSERT INTO master_lampu (code, merek, line_area, lokasi, indikator_mati_menyala, lampu_mati, nyala_otomatis, catatan, kondisi) 
+              VALUES ('$code', '$merek', '$line_area', '$lokasi', '$indikator', '$lampu_mati', '$otomatis', '$catatan', '$kondisi')";
 
     $redirect_url = (stripos($code, 'LE') === 0) ? '../admin/lampu_exit.php' : '../admin/master_lampu.php';
 

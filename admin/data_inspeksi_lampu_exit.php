@@ -44,9 +44,12 @@ if (isset($_GET['hapus']) && is_numeric($_GET['hapus'])) {
 $sql = "SELECT i.id_inspeksi, i.nama_operator, i.tanggal_cek,
                              i.id_lampu, i.kondisi_fisik, i.kondisi_lampu, i.kondisi_tulisan, i.keterangan
                       FROM inspeksi_lampu_exit i
-                      WHERE MONTH(i.tanggal_cek) = ? AND YEAR(i.tanggal_cek) = ?";
-$param_types  = "ii";
-$param_values = [$bulan_angka, $tahun];
+                      WHERE MONTH(i.tanggal_cek) = ? AND YEAR(i.tanggal_cek) = ? AND i.nama_operator = ?";
+
+$nama_operator_login = $_SESSION['nama_operator_popup'] ?? '';
+
+$param_types  = "iis";
+$param_values = [$bulan_angka, $tahun, $nama_operator_login];
 
 if ($cari !== '') {
     $like = "%$cari%";

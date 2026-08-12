@@ -8,6 +8,7 @@ if (isset($_POST['submit'])) {
 
     $id = $_POST['id'];
     $code = $_POST['code'];
+    $merek = $_POST['merek'];
     $line_area = $_POST['line_area'];
     $lokasi = $_POST['lokasi'];
     $catatan = $_POST['catatan'];
@@ -31,6 +32,7 @@ if (isset($_POST['submit'])) {
     // 1. Pastikan nama kolom di bawah ini (seperti indikator_mati_menyala) SUDAH PASTI SAMA dengan di phpMyAdmin
     $query = "UPDATE master_lampu SET 
                 code = ?, 
+                merek = ?, 
                 line_area = ?, 
                 lokasi = ?, 
                 indikator_mati_menyala = ?, 
@@ -43,7 +45,7 @@ if (isset($_POST['submit'])) {
     $stmt = mysqli_prepare($koneksi, $query);
     
     if ($stmt) {
-        mysqli_stmt_bind_param($stmt, "ssssssssi", $code, $line_area, $lokasi, $indikator, $lampu_mati, $otomatis, $catatan, $kondisi, $id);
+        mysqli_stmt_bind_param($stmt, "sssssssssi", $code, $merek, $line_area, $lokasi, $indikator, $lampu_mati, $otomatis, $catatan, $kondisi, $id);
         
         if (mysqli_stmt_execute($stmt)) {
 

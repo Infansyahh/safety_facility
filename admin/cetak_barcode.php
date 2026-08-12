@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 if (ob_get_length()) ob_end_clean();
@@ -29,7 +29,17 @@ if ($type === 'p3k') {
     if (!$data) die("Data lampu tidak ditemukan.");
 }
 
-$templatePath = ($type === 'p3k') ? '../foto/template_barcode_p3k.png' : '../foto/template_barcode.png';
+if ($type === 'p3k') {
+    $templatePath = '../foto/template_barcode_p3k.png';
+    $newQrWidth = 520; $newQrHeight = 520; $qrX = 1060; $qrY = 460;
+    $codeX = 460; $codeY = 558; $codeFontSize = 35;
+    $lokasiX = 460; $lokasiY = 700; $lokasiFontSize = 25; $lokasiMaxWidth = 300;
+} else {
+    $templatePath = '../foto/template_barcode_exit.png';
+    $newQrWidth = 524; $newQrHeight = 524; $qrX = 960; $qrY = 360;
+    $codeX = 459; $codeY = 577; $codeFontSize = 31;
+    $lokasiX = 459; $lokasiY = 686; $lokasiFontSize = 27; $lokasiMaxWidth = 382;
+}
 if (!file_exists($templatePath)) die("Error: File template tidak ditemukan.");
 
 $tempDir = "../proses/temp_qr/";
@@ -43,25 +53,20 @@ QRcode::png($qrContent, $qrFile, QR_ECLEVEL_Q, 20, 1);
 $sourceImg = imagecreatefrompng($templatePath);
 $qrImg = imagecreatefrompng($qrFile);
 
-$newQrWidth = 520;
-$newQrHeight = 520;
-$qrX = 1060;
-$qrY = 460;
-
 imagecopyresampled($sourceImg, $qrImg, $qrX, $qrY, 0, 0, $newQrWidth, $newQrHeight, imagesx($qrImg), imagesy($qrImg));
 
 $textColor = imagecolorallocate($sourceImg, 0, 0, 0);
 $fontPath = '../fonts/Poppins-Bold.ttf';
 
 if (file_exists($fontPath)) {
-    imagettftext($sourceImg, 35, 0, 460, 558, $textColor, $fontPath, $data['code']);
+    imagettftext($sourceImg, $codeFontSize, 0, $codeX, $codeY, $textColor, $fontPath, $data['code']);
     
     $textLokasi = $data['lokasi'];
-    $fontSize = 25;
-    $startX = 460;
-    $startY = 700;
+    $fontSize = $lokasiFontSize;
+    $startX = $lokasiX;
+    $startY = $lokasiY;
     $lineHeight = 50;
-    $maxWidth = 300; 
+    $maxWidth = $lokasiMaxWidth; 
 
     $words = explode(' ', $textLokasi);
     $currentLine = '';
@@ -81,8 +86,8 @@ if (file_exists($fontPath)) {
     }
     if ($currentLine !== '') imagettftext($sourceImg, $fontSize, 0, $startX, $startY, $textColor, $fontPath, $currentLine);
 } else {
-    imagestring($sourceImg, 5, 560, 550, $data['code'], $textColor);
-    imagestring($sourceImg, 5, 560, 730, $data['lokasi'], $textColor);
+    imagestring($sourceImg, 5, $codeX, $codeY - 20, $data['code'], $textColor);
+    imagestring($sourceImg, 5, $lokasiX, $lokasiY - 20, $data['lokasi'], $textColor);
 }
 
 header('Content-Type: image/png');

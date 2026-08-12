@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 include '../koneksi.php';
 
@@ -30,10 +30,10 @@ if ($search !== '') {
 
 $join_sql = "FROM master_lampu ml
     LEFT JOIN (
-        SELECT code_lampu, username, tanggal_inspeksi 
-        FROM inspeksi_lampu 
-        WHERE id_inspeksi IN (SELECT MAX(id_inspeksi) FROM inspeksi_lampu GROUP BY code_lampu)
-    ) il ON ml.code = il.code_lampu
+        SELECT id_lampu, nama_operator AS username, tanggal_cek AS tanggal_inspeksi 
+        FROM inspeksi_lampu_exit 
+        WHERE id_inspeksi IN (SELECT MAX(id_inspeksi) FROM inspeksi_lampu_exit GROUP BY id_lampu)
+    ) il ON ml.code = il.id_lampu
     WHERE ml.code LIKE 'LE%'" . $search_sql;
 
 // Hitung total data buat pagination
@@ -329,6 +329,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                     <i class="fa-solid fa-plus"></i> Tambah Data Baru
                 </button>
                 <button onclick="window.location.href='../export/excel_exit.php'" style="background: #20c000; border:none; padding:10px 15px; margin-bottom: 10px; color:white; border-radius:5px; cursor:pointer;">📤 Export Data Ke Excel</button>
+                <button type="submit" form="formBarcodeExit" style="background: #ff9800; border:none; padding:10px 15px; margin-bottom: 10px; color:white; border-radius:5px; cursor:pointer;">🏷️ Download Barcode Terpilih (<span id="counterExit">0</span>)</button>
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
@@ -355,10 +356,12 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             </div>
 
             <div class="table-container">
+                <form id="formBarcodeExit" method="POST" action="proses_unduh_barcode_word.php" target="_blank" onsubmit="return validasiBarcodeExit()">
+                <input type="hidden" name="type" value="lampu_exit">
                 <table>
                     <thead>
                         <tr>
-                            
+                            <th style="width: 3%"><input type="checkbox" id="checkAllExit" onclick="toggleAllExit(this)"></th>
                             <th style="width: 5%">No</th>
                             <th>Inspektor</th>
                             <th>Kode</th>
@@ -390,6 +393,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                                 }
                         ?>
                                 <tr>
+                                    <td><input type="checkbox" name="ids[]" value="<?= $row['id']; ?>" class="chkExit" onclick="hitungExit()"></td>
                                     <td><?= $no++; ?></td>
                                     <td><?= !empty($row['username']) ? htmlspecialchars($row['username']) : '<span style="color:#999; font-style:italic;">Belum Diinspeksi</span>'; ?></td>
                                     <td><?= htmlspecialchars($row['code']); ?></td>
@@ -413,11 +417,12 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                                 </tr>
                         <?php }
                         } else {
-                            echo "<tr><td colspan='9' style='text-align:center;'>Tidak ada data master Lampu Exit tersedia</td></tr>";
+                            echo "<tr><td colspan='10' style='text-align:center;'>Tidak ada data master Lampu Exit tersedia</td></tr>";
                         }
                         ?>
                     </tbody>
                 </table>
+                </form>
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:12px;">
@@ -618,6 +623,25 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             if (confirm("Apakah Anda yakin ingin menghapus data master lampu exit ini?")) {
                 window.location.href = "../proses/proses_hapus_lampu.php?id=" + id;
             }
+        }
+
+        function toggleAllExit(cb) {
+            document.querySelectorAll('.chkExit').forEach(c => c.checked = cb.checked);
+            hitungExit();
+        }
+
+        function hitungExit() {
+            const total = document.querySelectorAll('.chkExit:checked').length;
+            document.getElementById('counterExit').textContent = total;
+        }
+
+        function validasiBarcodeExit() {
+            const total = document.querySelectorAll('.chkExit:checked').length;
+            if (total === 0) {
+                alert('Pilih minimal 1 data dulu.');
+                return false;
+            }
+            return true;
         }
 
         function bukaModalBarcode(id, code) {

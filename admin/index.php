@@ -2,6 +2,8 @@
 include '../koneksi.php';
 session_start();
 
+global $koneksi;
+
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     header('Location: ../login.php');
     exit();
@@ -11,20 +13,13 @@ if (isset($_POST['simpan_operator'])) {
     $_SESSION['nama_operator_popup'] = $_POST['nama_operator'];
 }
 
-$host = 'localhost';
-$user = 'root';
-$pass = '';
-$db_name = 'safety_facility';
-
-$db = mysqli_connect($host, $user, $pass, $db_name);
-
 $total_pengguna = 0;
 $total_fasilitas = 0;
 $total_rusak = 0;
 $detail_notifikasi = [];  // Array untuk menyimpan detail item yang bermasalah
 
-if ($db) {
-    $q_user = mysqli_query($db, 'SELECT COUNT(*) as total FROM users');
+if ($koneksi) {
+    $q_user = mysqli_query($koneksi, 'SELECT COUNT(*) as total FROM users');
     if ($q_user) {
         $res = mysqli_fetch_assoc($q_user);
         $total_pengguna = $res['total'];
@@ -33,16 +28,16 @@ if ($db) {
         }
     }
 
-    $c_lampu = mysqli_fetch_assoc(mysqli_query($db, 'SELECT COUNT(*) as total FROM master_lampu'))['total'] ?? 0;
-    $c_p3k = mysqli_fetch_assoc(mysqli_query($db, 'SELECT COUNT(*) as total FROM master_p3k'))['total'] ?? 0;
-    $c_eyewash = mysqli_fetch_assoc(mysqli_query($db, 'SELECT COUNT(*) as total FROM master_eyewash'))['total'] ?? 0;
+    $c_lampu = mysqli_fetch_assoc(mysqli_query($koneksi, 'SELECT COUNT(*) as total FROM master_lampu'))['total'] ?? 0;
+    $c_p3k = mysqli_fetch_assoc(mysqli_query($koneksi, 'SELECT COUNT(*) as total FROM master_p3k'))['total'] ?? 0;
+    $c_eyewash = mysqli_fetch_assoc(mysqli_query($koneksi, 'SELECT COUNT(*) as total FROM master_eyewash'))['total'] ?? 0;
     $total_fasilitas = $c_lampu + $c_p3k + $c_eyewash;
 
     $current_month = date('m');
     $current_year = date('Y');
 
     // Ambil detail & jumlah Lampu Rusak
-    $r_lampu = mysqli_fetch_assoc(mysqli_query($db, "SELECT COUNT(*) as total FROM inspeksi_lampu WHERE kondisi = 'rusak'"))['total'] ?? 0;
+    $r_lampu = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT COUNT(*) as total FROM inspeksi_lampu WHERE kondisi = 'rusak'"))['total'] ?? 0;
     if ($r_lampu > 0) {
         $detail_notifikasi[] = [
             'icon' => 'fa-lightbulb',
@@ -53,7 +48,7 @@ if ($db) {
     }
 
     // DISINI PERBAIKANNYA: Menggunakan code_p3k dan tanggal_inspeksi sesuai file .sql baru
-    $r_p3k = mysqli_fetch_assoc(mysqli_query($db, "SELECT COUNT(DISTINCT code_p3k) as total FROM inspeksi_p3k 
+    $r_p3k = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT COUNT(DISTINCT code_p3k) as total FROM inspeksi_p3k 
         WHERE MONTH(tanggal_inspeksi) = '$current_month' AND YEAR(tanggal_inspeksi) = '$current_year' 
         AND kondisi = 'rusak'"))['total'] ?? 0;
     if ($r_p3k > 0) {
@@ -66,7 +61,7 @@ if ($db) {
     }
 
     // DISINI PERBAIKANNYA: Menggunakan code_eyewash dan tanggal_inspeksi sesuai file .sql baru
-    $r_eyewash = mysqli_fetch_assoc(mysqli_query($db, "SELECT COUNT(DISTINCT code_eyewash) as total FROM inspeksi_eyewash 
+    $r_eyewash = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT COUNT(DISTINCT code_eyewash) as total FROM inspeksi_eyewash 
         WHERE MONTH(tanggal_inspeksi) = '$current_month' AND YEAR(tanggal_inspeksi) = '$current_year' 
         AND kondisi = 'rusak'"))['total'] ?? 0;
     if ($r_eyewash > 0) {
@@ -387,7 +382,6 @@ $tanggal_format = $hari_indo . ', ' . date('d') . ' ' . $bulan_indo . ' ' . date
 
     <div class="modal" id="operatorModal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
             <h2 style="margin-bottom:20px;">Masukkan Nama Anda</h2>
             <form method="POST">
                 <label style="display:block;margin-bottom:8px;">Nama Operator</label>

@@ -4,10 +4,10 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 session_start();
 
-$host     = "localhost";
-$user     = "root";
-$pass     = "";
-$db  = "safety_facility"; 
+$host     = "sql308.infinityfree.com";
+$user     = "if0_42292966";
+$pass     = "corinthianbgr26";
+$db  = "if0_42292966_safety_facility";
 $db = mysqli_connect($host, $user, $pass, $db);
 
 if (!$db) {
@@ -68,7 +68,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         body {
-            background: url('https://images.unsplash.com/photo-1516549655169-df83a0774514?q=80&w=1920') no-repeat center center fixed;
+            background: url('foto/corinthian.jpg') no-repeat center center fixed;
             background-size: cover;
             height: 100vh;
             display: flex;

@@ -46,10 +46,12 @@ $sql = "SELECT i.id_inspeksi, i.username AS nama_lengkap, i.tanggal_inspeksi,
                i.code_eyewash, m.lokasi, i.kondisi, i.catatan
         FROM inspeksi_eyewash i
         LEFT JOIN master_eyewash m ON i.code_eyewash = m.code
-        WHERE MONTH(i.tanggal_inspeksi) = ? AND YEAR(i.tanggal_inspeksi) = ?";
+        WHERE MONTH(i.tanggal_inspeksi) = ? AND YEAR(i.tanggal_inspeksi) = ? AND i.username = ?";
 
-$param_types  = "ii";
-$param_values = [$bulan_angka, $tahun];
+$nama_operator_login = $_SESSION['nama_operator_popup'] ?? '';
+
+$param_types  = "iis";
+$param_values = [$bulan_angka, $tahun, $nama_operator_login];
 
 if ($cari !== '') {
     $like = "%$cari%";

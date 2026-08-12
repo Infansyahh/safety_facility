@@ -57,14 +57,19 @@ $sql = "SELECT i.id_inspeksi,
                i.code_lampu, 
                m.lokasi, 
                i.kondisi, 
-               i.catatan
+               i.catatan,
+               i.indikator_mati_menyala,
+               i.lampu_mati,
+               i.nyala_otomatis
         FROM inspeksi_lampu i
         LEFT JOIN users u ON i.username = u.username
         LEFT JOIN master_lampu m ON i.code_lampu = m.code
-        WHERE MONTH(i.tanggal_inspeksi) = ? AND YEAR(i.tanggal_inspeksi) = ?";
+        WHERE MONTH(i.tanggal_inspeksi) = ? AND YEAR(i.tanggal_inspeksi) = ? AND i.username = ?";
 
-$param_types  = "ii";
-$param_values = [$angka_bulan, $tahun];
+$nama_operator_login = $_SESSION['nama_operator_popup'] ?? '';
+
+$param_types  = "iis";
+$param_values = [$angka_bulan, $tahun, $nama_operator_login];
 
 if ($cari !== '') {
     $like = "%$cari%";
@@ -90,14 +95,21 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
     require '../vendor/autoload.php';
     require '../export_excel_helper.php';
 
-    $headers = ['No', 'Nama Operator', 'Tanggal Inspeksi', 'Code Lampu', 'Lokasi', 'Kondisi', 'Catatan'];
+    $headers = ['No', 'Nama Operator', 'Tanggal Inspeksi', 'Code Lampu', 'Lokasi', 'Indikator', 'Lampu Mati', 'Nyala Otomatis', 'Catatan'];
     $data = [];
     $no = 1;
     foreach ($rows as $r) {
-        $vals = array_values($r);
-        array_shift($vals);
-        array_unshift($vals, $no++);
-        $data[] = $vals;
+        $data[] = [
+            $no++,
+            $r['nama_operator'] ?? '-',
+            $r['tanggal_inspeksi'],
+            $r['code_lampu'] ?? '-',
+            $r['lokasi'] ?? '-',
+            $r['indikator_mati_menyala'] ?? '-',
+            $r['lampu_mati'] ?? '-',
+            $r['nyala_otomatis'] ?? '-',
+            $r['catatan'] ?? '-'
+        ];
     }
     export_excel_xlsx($headers, $data, 'Laporan_Lampu_Emergency_' . $bulan_param . '_' . $tahun);
     exit();
@@ -605,7 +617,9 @@ foreach ($rows as $r) {
                             <th>Tanggal Inspeksi</th>
                             <th>Code Lampu</th>
                             <th>Lokasi</th>
-                            <th>Kondisi</th>
+                            <th>Indikator</th>
+                            <th>Lampu Mati</th>
+                            <th>Nyala Otomatis</th>
                             <th>Catatan</th>
                             <th>Aksi</th>
                         </tr>
@@ -621,11 +635,16 @@ foreach ($rows as $r) {
                                     <td><?= htmlspecialchars($r['code_lampu'] ?? '-'); ?></td>
                                     <td><?= htmlspecialchars($r['lokasi'] ?? '-'); ?></td>
                                     <td>
-                                        <?php if (strtolower($r['kondisi']) === 'baik'): ?>
-                                            <span class="badge b-green">Baik</span>
-                                        <?php else: ?>
-                                            <span class="badge b-red"><?= htmlspecialchars($r['kondisi'] ?? 'Rusak'); ?></span>
-                                        <?php endif; ?>
+                                        <?php $ind = $r['indikator_mati_menyala'] ?? '-'; ?>
+                                        <span class="badge <?= strtolower($ind) === 'mati' ? 'b-red' : 'b-green'; ?>"><?= htmlspecialchars($ind); ?></span>
+                                    </td>
+                                    <td>
+                                        <?php $lm = $r['lampu_mati'] ?? '-'; ?>
+                                        <span class="badge <?= strtolower($lm) === 'ya' ? 'b-red' : 'b-green'; ?>"><?= htmlspecialchars($lm); ?></span>
+                                    </td>
+                                    <td>
+                                        <?php $oto = $r['nyala_otomatis'] ?? '-'; ?>
+                                        <span class="badge <?= strtolower($oto) === 'ya' ? 'b-green' : 'b-red'; ?>"><?= htmlspecialchars($oto); ?></span>
                                     </td>
                                     <td><?= htmlspecialchars($r['catatan'] ?? '-'); ?></td>
                                     <td>
@@ -639,7 +658,7 @@ foreach ($rows as $r) {
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="8">
+                                <td colspan="10">
                                     <div class="empty-state">
                                         <i class="fa-solid fa-folder-open"></i>
                                         <p>Tidak ada data inspeksi Lampu Emergency untuk <?= htmlspecialchars($bulan_indo) . " " . $tahun; ?></p>

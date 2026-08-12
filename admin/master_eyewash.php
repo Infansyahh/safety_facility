@@ -148,7 +148,6 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
         }
 
         .table-container table {
-            min-width: 1200px;
             width: max-content;
             border-collapse: collapse;
             margin-top: 10px;
@@ -160,15 +159,38 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
         }
 
         thead th {
-            padding: 15px;
+            padding: 10px;
             text-align: left;
             font-weight: 600;
             border: 1px solid #0042d1;
         }
 
         tbody td {
-            padding: 12px;
+            padding: 10px;
             border: 1px solid #ddd;
+        }
+
+        thead tr.sub-header {
+            background-color: #0042d1;
+        }
+
+        thead tr.sub-header th {
+            padding: 6px 4px;
+            font-size: 12px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .col-check {
+            width: 40px;
+            padding: 6px 4px !important;
+        }
+
+        .icon-check {
+            color: #28a745;
+            font-size: 14px;
         }
 
         tbody tr:nth-child(even) {
@@ -326,6 +348,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                     <i class="fa-solid fa-plus"></i> Tambah Data Baru
                 </button>
                 <button onclick="window.location.href='../export/excel_eyewash.php'" style="background: #20c000; border:none; padding:10px 15px; margin-bottom: 10px; color:white; border-radius:5px; cursor:pointer;">📤 Export Data Ke Excel</button>
+                <button type="submit" form="formBarcodeEyewash" style="background: #ff9800; border:none; padding:10px 15px; margin-bottom: 10px; color:white; border-radius:5px; cursor:pointer;">🏷️ Download Barcode Terpilih (<span id="counterEyewash">0</span>)</button>
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
@@ -352,21 +375,31 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             </div>
 
             <div class="table-container">
+                <form id="formBarcodeEyewash" method="POST" action="proses_unduh_barcode_word.php" target="_blank" onsubmit="return validasiBarcodeEyewash()">
+                <input type="hidden" name="type" value="eyewash">
                 <table>
                     <thead>
                         <tr>
-                            
-                            <th style="width: 3%">No</th>
-                            <th>Inspektor</th>
-                            <th>Kode Eye Wash</th>
-                            <th>Departemen</th>
-                            <th>Lokasi</th>
-                            <th>Catatan</th>
-                            <th>Aliran Air (15 Menit)</th>
-                            <th>Kondisi Air</th>
-                            <th>Kondisi Kotak</th>
-                            <th>Kondisi Akhir</th>
-                            <th style="width: 10%">Aksi</th>
+                            <th style="width: 3%" rowspan="2"><input type="checkbox" id="checkAllEyewash" onclick="toggleAllEyewash(this)"></th>
+                            <th style="width: 3%" rowspan="2">No</th>
+                            <th rowspan="2">Inspektor</th>
+                            <th rowspan="2">Kode Eye Wash</th>
+                            <th rowspan="2">Departemen</th>
+                            <th rowspan="2">Lokasi</th>
+                            <th rowspan="2">Catatan</th>
+                            <th colspan="2">Aliran Air (15 Menit)</th>
+                            <th colspan="2">Kondisi Air</th>
+                            <th colspan="2">Kondisi Kotak</th>
+                            <th rowspan="2">Kondisi Akhir</th>
+                            <th style="width: 10%" rowspan="2">Aksi</th>
+                        </tr>
+                        <tr class="sub-header">
+                            <th class="text-center col-check">Lancar</th>
+                            <th class="text-center col-check">Tidak</th>
+                            <th class="text-center col-check">Bersih</th>
+                            <th class="text-center col-check">Kotor</th>
+                            <th class="text-center col-check">Bagus</th>
+                            <th class="text-center col-check">Tidak</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -396,15 +429,28 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                                 }
                         ?>
                                 <tr>
+                                    <td><input type="checkbox" name="ids[]" value="<?= $safeId; ?>" class="chkEyewash" onclick="hitungEyewash()"></td>
                                     <td><?= $no++; ?></td>
                                     <td><?= !empty($row['username']) ? htmlspecialchars($row['username']) : '<span style="color:#999; font-style:italic;">Belum Diinspeksi</span>'; ?></td>
                                     <td><strong><?= htmlspecialchars($row['code']); ?></strong></td>
                                     <td><?= !empty($row['line_area']) ? htmlspecialchars($row['line_area']) : '-'; ?></td>
                                     <td><?= htmlspecialchars($row['lokasi']); ?></td>
                                     <td><?= !empty($row['catatan']) ? htmlspecialchars($row['catatan']) : '-'; ?></td>
-                                    <td><?= $val_air; ?></td>
-                                    <td><?= $val_kondisi_air; ?></td>
-                                    <td><?= $val_kotak; ?></td>
+                                    <?php
+                                        $isLancar = ($val_air !== '-') && (stripos($val_air, 'tidak') === false);
+                                        $isTidakLancar = (stripos($val_air, 'tidak') !== false);
+                                        $isBersih = ($val_kondisi_air !== '-') && (stripos($val_kondisi_air, 'kotor') === false);
+                                        $isKotor = (stripos($val_kondisi_air, 'kotor') !== false);
+                                        $isBagus = ($val_kotak !== '-') && (stripos($val_kotak, 'tidak') === false);
+                                        $isTidakBagus = (stripos($val_kotak, 'tidak') !== false);
+                                        $centang = '<i class="fa-solid fa-check icon-check"></i>';
+                                    ?>
+                                    <td class="text-center col-check"><?= $isLancar ? $centang : ''; ?></td>
+                                    <td class="text-center col-check"><?= $isTidakLancar ? $centang : ''; ?></td>
+                                    <td class="text-center col-check"><?= $isBersih ? $centang : ''; ?></td>
+                                    <td class="text-center col-check"><?= $isKotor ? $centang : ''; ?></td>
+                                    <td class="text-center col-check"><?= $isBagus ? $centang : ''; ?></td>
+                                    <td class="text-center col-check"><?= $isTidakBagus ? $centang : ''; ?></td>
                                     <td>
                                         <?php if (strtolower($safeKondisi) == 'baik') : ?>
                                             <span style="background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Baik</span>
@@ -428,11 +474,12 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                                 </tr>
                         <?php }
                         } else {
-                            echo "<tr><td colspan='12' style='text-align:center;'>Tidak ada data master eyewash tersedia</td></tr>";
+                            echo "<tr><td colspan='15' style='text-align:center;'>Tidak ada data master eyewash tersedia</td></tr>";
                         }
                         ?>
                     </tbody>
                 </table>
+                </form>
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:12px;">
@@ -710,6 +757,25 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             if (confirm("Apakah Anda yakin ingin menghapus data master eyewash ini?")) {
                 window.location.href = "../proses/proses_hapus_eyewash.php?id=" + id;
             }
+        }
+
+        function toggleAllEyewash(cb) {
+            document.querySelectorAll('.chkEyewash').forEach(c => c.checked = cb.checked);
+            hitungEyewash();
+        }
+
+        function hitungEyewash() {
+            const total = document.querySelectorAll('.chkEyewash:checked').length;
+            document.getElementById('counterEyewash').textContent = total;
+        }
+
+        function validasiBarcodeEyewash() {
+            const total = document.querySelectorAll('.chkEyewash:checked').length;
+            if (total === 0) {
+                alert('Pilih minimal 1 data dulu.');
+                return false;
+            }
+            return true;
         }
 
         function bukaModalBarcode(id, code) {

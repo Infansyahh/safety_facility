@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 include '../koneksi.php';
 
@@ -161,7 +161,6 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
         }
 
         .table-container table {
-            min-width: 1400px;
             width: max-content;
             border-collapse: collapse;
             margin-top: 10px;
@@ -173,15 +172,38 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
         }
 
         thead th {
-            padding: 15px;
+            padding: 10px;
             text-align: left;
             font-weight: 600;
             border: 1px solid #0042d1;
         }
 
         tbody td {
-            padding: 12px;
+            padding: 10px;
             border: 1px solid #ddd;
+        }
+
+        thead tr.sub-header {
+            background-color: #0042d1;
+        }
+
+        thead tr.sub-header th {
+            padding: 6px 4px;
+            font-size: 12px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .col-check {
+            width: 40px;
+            padding: 6px 4px !important;
+        }
+
+        .icon-check {
+            color: #28a745;
+            font-size: 14px;
         }
 
         tbody tr:nth-child(even) {
@@ -325,6 +347,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                     <i class="fa-solid fa-plus"></i> Tambah Data Baru
                 </button>
                 <button onclick="window.location.href='../export/excel_lampu.php'" style="background: #20c000; border:none; padding:10px 15px; margin-bottom: 10px; color:white; border-radius:5px; cursor:pointer;">📤 Export Data Ke Excel</button>
+                <button type="submit" form="formBarcodeLampu" style="background: #ff9800; border:none; padding:10px 15px; margin-bottom: 10px; color:white; border-radius:5px; cursor:pointer;">🏷️ Download Barcode Terpilih (<span id="counterLampu">0</span>)</button>
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
@@ -351,21 +374,31 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             </div>
 
             <div class="table-container">
+                <form id="formBarcodeLampu" method="POST" action="proses_unduh_barcode_word.php" target="_blank" onsubmit="return validasiBarcodeLampu()">
+                <input type="hidden" name="type" value="lampu">
                 <table>
                     <thead>
                         <tr>
-                            
-                            <th style="width: 5%">No</th>
-                            <th>Inspektor</th>
-                            <th>Kode</th>
-                            <th>Merek</th>
-                            <th>Departemen</th>
-                            <th>Lokasi</th>
-                            <th>Catatan</th>
-                            <th>Indikator</th>
-                            <th>Lampu Mati</th>
-                            <th>Otomatis</th>
-                            <th style="width: 12%">Aksi</th>
+                            <th style="width: 3%" rowspan="2"><input type="checkbox" id="checkAllLampu" onclick="toggleAllLampu(this)"></th>
+                            <th style="width: 5%" rowspan="2">No</th>
+                            <th rowspan="2">Inspektor</th>
+                            <th rowspan="2">Kode</th>
+                            <th rowspan="2">Merek</th>
+                            <th rowspan="2">Departemen</th>
+                            <th rowspan="2">Lokasi</th>
+                            <th rowspan="2">Catatan</th>
+                            <th colspan="2">Indikator</th>
+                            <th colspan="2">Lampu Mati</th>
+                            <th colspan="2">Nyala Otomatis</th>
+                            <th style="width: 12%" rowspan="2">Aksi</th>
+                        </tr>
+                        <tr class="sub-header">
+                            <th class="text-center col-check">Nyala</th>
+                            <th class="text-center col-check">Mati</th>
+                            <th class="text-center col-check">Ya</th>
+                            <th class="text-center col-check">Tidak</th>
+                            <th class="text-center col-check">Ya</th>
+                            <th class="text-center col-check">Tidak</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -383,6 +416,7 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                                 $safeCatatan = htmlspecialchars($row['catatan'] ?? '', ENT_QUOTES);
                         ?>
                                 <tr>
+                                    <td><input type="checkbox" name="ids[]" value="<?= $row['id']; ?>" class="chkLampu" onclick="hitungLampu()"></td>
                                     <td><?= $no++; ?></td>
                                     <td><?= !empty($row['username']) ? htmlspecialchars($row['username']) : '<span style="color:#999; font-style:italic;">Belum Diinspeksi</span>'; ?></td>
                                     <td><?= htmlspecialchars($row['code']); ?></td>
@@ -390,9 +424,18 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                                     <td><?= !empty($row['line_area']) ? htmlspecialchars($row['line_area']) : '-'; ?></td>
                                     <td><?= htmlspecialchars($row['lokasi']); ?></td>
                                     <td><?= !empty($row['catatan']) ? htmlspecialchars($row['catatan']) : '-'; ?></td>
-                                    <td><?= (strtolower($safeIndikator) == 'nyala' || strtolower($safeIndikator) == 'ya') ? 'Nyala' : 'Mati'; ?></td>
-                                    <td><?= (strtolower($safeLampuMati) == 'ya') ? 'Ya' : 'Tidak'; ?></td>
-                                    <td><?= (strtolower($safeOtomatis) == 'ya') ? 'Ya' : 'Tidak'; ?></td>
+                                    <?php
+                                        $isNyala = (strtolower($safeIndikator) == 'nyala' || strtolower($safeIndikator) == 'ya');
+                                        $isLampuMati = (strtolower($safeLampuMati) == 'ya');
+                                        $isOtomatis = (strtolower($safeOtomatis) == 'ya');
+                                        $centang = '<i class="fa-solid fa-check icon-check"></i>';
+                                    ?>
+                                    <td class="text-center col-check"><?= $isNyala ? $centang : ''; ?></td>
+                                    <td class="text-center col-check"><?= !$isNyala ? $centang : ''; ?></td>
+                                    <td class="text-center col-check"><?= $isLampuMati ? $centang : ''; ?></td>
+                                    <td class="text-center col-check"><?= !$isLampuMati ? $centang : ''; ?></td>
+                                    <td class="text-center col-check"><?= $isOtomatis ? $centang : ''; ?></td>
+                                    <td class="text-center col-check"><?= !$isOtomatis ? $centang : ''; ?></td>
                                     <td>
                                         <button type="button" class="table-action-btn btn-barcode" onclick="bukaModalBarcode(<?= $row['id']; ?>, '<?= $safeCode; ?>')">
                                             <i class="fa-solid fa-barcode"></i>
@@ -409,11 +452,12 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
                                 </tr>
                         <?php }
                         } else {
-                            echo "<tr><td colspan='12' style='text-align:center;'>Tidak ada data master tersedia</td></tr>";
+                            echo "<tr><td colspan='13' style='text-align:center;'>Tidak ada data master tersedia</td></tr>";
                         }
                         ?>
                     </tbody>
                 </table>
+                </form>
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:12px;">
@@ -675,6 +719,25 @@ $tanggal_format = $hari_indo . ", " . date('d') . " " . $bulan_indo . " " . date
             if (confirm("Apakah Anda yakin ingin menghapus data master lampu ini?")) {
                 window.location.href = "../proses/proses_hapus_lampu.php?id=" + id;
             }
+        }
+
+        function toggleAllLampu(cb) {
+            document.querySelectorAll('.chkLampu').forEach(c => c.checked = cb.checked);
+            hitungLampu();
+        }
+
+        function hitungLampu() {
+            const total = document.querySelectorAll('.chkLampu:checked').length;
+            document.getElementById('counterLampu').textContent = total;
+        }
+
+        function validasiBarcodeLampu() {
+            const total = document.querySelectorAll('.chkLampu:checked').length;
+            if (total === 0) {
+                alert('Pilih minimal 1 data dulu.');
+                return false;
+            }
+            return true;
         }
 
         function bukaModalBarcode(id, code) {
