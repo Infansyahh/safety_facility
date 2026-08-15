@@ -4,10 +4,10 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 session_start();
 
-$host     = "sql308.infinityfree.com";
-$user     = "if0_42292966";
-$pass     = "corinthianbgr26";
-$db  = "if0_42292966_safety_facility";
+$host     = "localhost";
+$user     = "root";
+$pass     = "";
+$db  = "safety_facility";
 $db = mysqli_connect($host, $user, $pass, $db);
 
 if (!$db) {

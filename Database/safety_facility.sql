@@ -1,11 +1,3 @@
--- phpMyAdmin SQL Dump
--- version 4.9.0.1
--- https://www.phpmyadmin.net/
---
--- Host: sql308.infinityfree.com
--- Generation Time: Aug 11, 2026 at 09:57 PM
--- Server version: 11.4.12-MariaDB
--- PHP Version: 7.2.22
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET AUTOCOMMIT = 0;
@@ -19,7 +11,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `if0_42292966_safety_facility`
+-- Database: `safety_facility`
 --
 
 -- --------------------------------------------------------

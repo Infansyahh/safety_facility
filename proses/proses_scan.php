@@ -10,7 +10,9 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 }
 
 if (isset($_GET['scan_id'])) {
-    $scan_id = mysqli_real_escape_string($koneksi, $_GET['scan_id']);
+    $scan_id = trim($_GET['scan_id']);
+    $scan_id = preg_replace('/[\r\n\t]+/', '', $scan_id);
+    $scan_id = mysqli_real_escape_string($koneksi, $scan_id);
 
     // Check master_lampu
     $query_lampu = mysqli_query($koneksi, "SELECT code FROM master_lampu WHERE id = '$scan_id' OR code = '$scan_id'");

@@ -1,8 +1,8 @@
 <?php
-$host     = "sql308.infinityfree.com";
-$user     = "if0_42292966";
-$pass     = "corinthianbgr26";
-$db_name  = "if0_42292966_safety_facility";
+$host     = "localhost";
+$user     = "root";
+$pass     = "";
+$db_name  = "safety_facility";
 $koneksi = mysqli_connect($host, $user, $pass, $db_name);
 
 if (!$koneksi) {
