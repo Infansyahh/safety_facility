@@ -1,1 +1,18 @@
-DirectoryIndex landing_page.php
+DirectoryIndex frontend/dist/index.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /safety_facility/
+
+  RewriteCond %{REQUEST_URI} ^/safety_facility/?$
+  RewriteRule ^ frontend/dist/ [R=301,L]
+
+  RewriteCond %{REQUEST_URI} ^/safety_facility/frontend/dist/?$
+  RewriteRule ^ frontend/dist/index.html [L]
+
+  RewriteRule ^frontend/dist/index\.html$ - [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ frontend/dist/index.html [L]
+</IfModule>
