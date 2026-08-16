@@ -72,7 +72,6 @@ safety_facility/
 │
 ├── Database/
 │   └── safety_facility.sql # Skema & data database
-├── .htaccess               # Redirect + SPA fallback (Apache)
 └── .gitignore
 ```
 
